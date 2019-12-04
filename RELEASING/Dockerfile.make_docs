@@ -14,27 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-**/__pycache__/
-**/.mypy_cache
-**/.pytest_cache
-**/.tox
-**/.vscode
-**/.idea
-**/.coverage
-**/.DS_Store
-**/.eggs
-**/.python-version
-**/*.egg-info
-**/*.bak
-**/*.db
-**/*.pyc
-**/*.sqllite
-**/*.swp
+FROM python:3.6-jessie
+ARG VERSION
 
-tests/
-docs/
-install/
-superset/assets/node_modules/
-superset/assets/cypress/
-superset/assets/coverage/
-venv
+RUN git clone --depth 1 --branch ${VERSION} https://github.com/apache/incubator-superset.git /superset
+WORKDIR /superset
+# install doc dependencies
+RUN pip install -r requirements.txt \
+    && pip install -r docs/requirements.txt
+# build the docs
+RUN python setup.py build_sphinx
+
+COPY make_docs_entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

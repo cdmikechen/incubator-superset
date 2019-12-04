@@ -50,6 +50,7 @@ from sqlalchemy_utils import EncryptedType
 
 from superset import conf, db, security_manager
 from superset.connectors.base.models import BaseColumn, BaseDatasource, BaseMetric
+from superset.constants import NULL_STRING
 from superset.exceptions import SupersetException
 from superset.models.core import Database
 from superset.models.helpers import AuditMixinNullable, ImportMixin, QueryResult
@@ -292,6 +293,10 @@ class DruidCluster(Model, AuditMixinNullable, ImportMixin):
         return self.verbose_name or self.cluster_name
 
 
+sa.event.listen(DruidCluster, "after_insert", security_manager.set_perm)
+sa.event.listen(DruidCluster, "after_update", security_manager.set_perm)
+
+
 class DruidColumn(Model, BaseColumn):
     """ORM model for storing Druid datasource column metadata"""
 
@@ -529,8 +534,7 @@ class DruidDatasource(Model, BaseDatasource):
         else:
             return None
 
-    @property
-    def schema_perm(self) -> Optional[str]:
+    def get_schema_perm(self) -> Optional[str]:
         """Returns schema permission if present, cluster one otherwise."""
         return security_manager.get_schema_perm(self.cluster, self.schema)
 
@@ -1363,7 +1367,7 @@ class DruidDatasource(Model, BaseDatasource):
         Here we replace None with <NULL> and make the whole series a
         str instead of an object.
         """
-        df[groupby_cols] = df[groupby_cols].fillna("<NULL>").astype("unicode")
+        df[groupby_cols] = df[groupby_cols].fillna(NULL_STRING).astype("unicode")
         return df
 
     def query(self, query_obj: Dict) -> QueryResult:
@@ -1559,9 +1563,9 @@ class DruidDatasource(Model, BaseDatasource):
                     alphaNumeric=is_numeric_col,
                 )
             elif op == "IS NULL":
-                cond = Dimension(col) is None
+                cond = Filter(dimension=col, value="")
             elif op == "IS NOT NULL":
-                cond = Dimension(col) is not None
+                cond = ~Filter(dimension=col, value="")
 
             if filters:
                 filters = Filter(type="and", fields=[cond, filters])

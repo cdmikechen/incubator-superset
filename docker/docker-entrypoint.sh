@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -14,27 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-**/__pycache__/
-**/.mypy_cache
-**/.pytest_cache
-**/.tox
-**/.vscode
-**/.idea
-**/.coverage
-**/.DS_Store
-**/.eggs
-**/.python-version
-**/*.egg-info
-**/*.bak
-**/*.db
-**/*.pyc
-**/*.sqllite
-**/*.swp
+set -eo pipefail
 
-tests/
-docs/
-install/
-superset/assets/node_modules/
-superset/assets/cypress/
-superset/assets/coverage/
-venv
+if [ "${#}" -ne 0 ]; then
+    exec "${@}"
+else
+    gunicorn --bind  "0.0.0.0:${SUPERSET_PORT}" \
+        --workers 1 \
+        --timeout 60 \
+        --limit-request-line 0 \
+        --limit-request-field_size 0 \
+        "${FLASK_APP}"
+fi
