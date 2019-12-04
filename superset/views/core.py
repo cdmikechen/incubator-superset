@@ -349,6 +349,7 @@ class SliceModelView(SupersetModelView, DeleteMixin):  # noqa
         "slice_name": _("Name"),
         "table": _("Table"),
         "viz_type": _("Visualization Type"),
+        "datasource_name": _("Datasource Name"),
     }
 
     add_form_query_rel_fields = {"dashboards": [["name", DashboardFilter, None]]}
@@ -487,6 +488,7 @@ class DashboardModelView(SupersetModelView, DeleteMixin):  # noqa
         "dashboard_link": _("Dashboard"),
         "dashboard_title": _("Title"),
         "slug": _("Slug"),
+        "published": _("Published"),
         "charts": _("Charts"),
         "owners": _("Owners"),
         "creator": _("Creator"),

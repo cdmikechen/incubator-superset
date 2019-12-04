@@ -141,7 +141,7 @@ class FilterBox extends React.Component {
               label={t('Time range')}
               description={t('Select start and end date')}
               onChange={(...args) => { this.changeFilter(TIME_RANGE, ...args); }}
-              value={this.state.selectedValues[TIME_RANGE] || 'No filter'}
+              value={this.state.selectedValues[TIME_RANGE] || t('No filter')}
             />
           </div>
         </div>

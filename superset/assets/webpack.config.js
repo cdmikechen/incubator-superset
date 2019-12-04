@@ -39,7 +39,7 @@ const BUILD_DIR = path.resolve(__dirname, './dist');
 const {
   mode = 'development',
   devserverPort = 9000,
-  supersetPort = 8088,
+  supersetPort = 5000,
   measure = false,
   analyzeBundle = false,
 } = parsedArgs;

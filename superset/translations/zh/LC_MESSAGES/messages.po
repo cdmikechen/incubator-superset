@@ -741,11 +741,11 @@ msgstr "搜索结果"
 
 #: superset/assets/src/SqlLab/components/QuerySearch.jsx:177
 msgid "[From]-"
-msgstr "[From]-"
+msgstr "[从]-"
 
 #: superset/assets/src/SqlLab/components/QuerySearch.jsx:187
 msgid "[To]-"
-msgstr "[To]-"
+msgstr "[至]-"
 
 #: superset/assets/src/SqlLab/components/QuerySearch.jsx:196
 msgid "[Query Status]"
@@ -825,6 +825,7 @@ msgstr "运行选定的查询"
 
 #: superset/assets/src/SqlLab/components/RunQueryActionButton.jsx:21
 #: superset/assets/src/components/RefreshChartOverlay.jsx:26
+#: superset/assets/src/explore/components/QueryAndSaveBtns.jsx:71
 msgid "Run Query"
 msgstr "运行查询"
 
@@ -869,6 +870,7 @@ msgstr "为您的查询写一段描述"
 #: superset/assets/src/dashboard/components/Controls.jsx:125
 #: superset/assets/src/dashboard/components/SaveModal.jsx:151
 #: superset/assets/src/explore/components/SaveModal.jsx:221
+#: superset/assets/src/explore/components/QueryAndSaveBtns.jsx:86
 msgid "Save"
 msgstr "保存"
 
@@ -5346,8 +5348,9 @@ msgstr "线宽"
 #~ msgid "Duration (in seconds) of the caching timeout for this slice."
 #~ msgstr "切片数据过期时间（秒）"
 
-#~ msgid "Slice"
-#~ msgstr "切片"
+#: superset/assets/src/profile/components/Favorites.jsx:51
+msgid "Slice"
+msgstr "切片"
 
 #~ msgid ""
 #~ "This json object describes the positioning of the widgets in the "
@@ -5362,3 +5365,283 @@ msgstr "线宽"
 
 #~ msgid "Cannot find User %(name)s, please ask your admin to create one."
 #~ msgstr "找不到用户 %(name)s，请您让管理员创建一个。"
+
+#: superset/assets/src/welcome/DashboardTable.jsx:50
+msgid "An error occurred while fethching Dashboards"
+msgstr "当查询看板时候出错"
+
+#: superset/views/core.py:445
+msgid "Published"
+msgstr "已发布"
+
+#: superset/assets/src/SqlLab/components/ResultSet.jsx:159
+msgid "Filter Results"
+msgstr "过滤结果"
+
+#: superset/assets/src/profile/components/Favorites.jsx:51
+msgid "Favorited"
+msgstr "已收藏"
+
+#: superset/templates/appbuilder/navbar_right.html:30
+msgid "New"
+msgstr "新建"
+
+#: superset/templates/appbuilder/general/widgets/search.html:24
+msgid "Filter List"
+msgstr "过滤条件"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:214
+msgid "View query"
+msgstr "查看查询"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:224
+msgid "View results"
+msgstr "查看结果"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:234
+msgid "View samples"
+msgstr "查看样例"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:245
+msgid "Run in SQL Lab"
+msgstr "在 SQL Lab 中执行"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:140
+msgid "No data"
+msgstr "没有数据"
+
+#: superset/assets/src/explore/components/RowCountLabel.jsx:35
+msgid "rows"
+msgstr "行"
+
+#: superset/assets/src/explore/components/RowCountLabel.jsx:35
+msgid "Time range"
+msgstr "时间范围"
+
+#: superset/assets/src/explore/components/controls/DateFilterControl.jsx:456
+msgid "Ok"
+msgstr "确认"
+
+#: superset/assets/src/SqlLab/components/TemplateParamsEditor.jsx:128
+msgid "parameters"
+msgstr "参数"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:153
+msgid "Data"
+msgstr "数据"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:157
+msgid "Customize"
+msgstr "自定义"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:157
+msgid "Defaults"
+msgstr "默认"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:157
+msgid "Custom"
+msgstr "自定义"
+
+msgid "custom_start_end"
+msgstr "自定义起始时间"
+
+msgid "custom_range"
+msgstr "自定义区间"
+
+msgid "Last"
+msgstr "之前"
+
+msgid "Next"
+msgstr "之后"
+
+msgid "Last day"
+msgstr "昨天"
+
+msgid "Last week"
+msgstr "上周"
+
+msgid "Last month"
+msgstr "上个月"
+
+msgid "Last quarter"
+msgstr "上个季度"
+
+msgid "Last year"
+msgstr "去年"
+
+msgid "No filter"
+msgstr "无筛选"
+
+msgid "Superset supports smart date parsing. Strings like `last sunday` or `last october` can be used."
+msgstr "Superset支持智能的时间格式化。文本类似 `last sunday` 或者 `last october`这样的语句也可以被识别。"
+
+msgid "seconds"
+msgstr "秒"
+
+msgid "minutes"
+msgstr "分钟"
+
+msgid "hours"
+msgstr "小时"
+
+msgid "days"
+msgstr "天"
+
+msgid "weeks"
+msgstr "周"
+
+msgid "months"
+msgstr "月"
+
+msgid "years"
+msgstr "年"
+
+msgid "Start / end"
+msgstr "开始 / 结束"
+
+msgid "Relative to today"
+msgstr "相对于今天"
+
+msgid "Draft"
+msgstr "草稿"
+
+msgid "Share dashboard"
+msgstr "分享看板"
+
+msgid "Share chart"
+msgstr "分享图表"
+
+msgid "Insert components"
+msgstr "插入组件"
+
+msgid "Colors"
+msgstr "颜色"
+
+msgid "Save changes"
+msgstr "保存改变"
+
+msgid "Switch to view mode"
+msgstr "切换视图模式"
+
+msgid "Force refresh dashboard"
+msgstr "强制刷新看板"
+
+msgid "Force refresh"
+msgstr "强制刷新"
+
+msgid "Superset Dashboard"
+msgstr "Superset 看板"
+
+msgid "Check out this dashboard: "
+msgstr "查看此看板："
+
+msgid "Discard changes"
+msgstr "放弃更改"
+
+msgid "Set auto-refresh interval"
+msgstr "设置自动刷新间隔"
+
+msgid "Auto-refresh dashboard"
+msgstr "自动刷新看板"
+
+msgid "Edit dashboard metadata"
+msgstr "编辑看板元数据"
+
+msgid "Edit dashboard"
+msgstr "编辑看板"
+
+msgid "Edit chart metadata"
+msgstr "编辑图表元数据"
+
+msgid "Cached %s"
+msgstr "缓存 %s"
+
+msgid "Fetched %s"
+msgstr "在 %s 之前获取"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Choose File"
+msgstr "选择文件"
+
+msgid "List Query"
+msgstr "查询列表"
+
+msgid "List Annotation Layer"
+msgstr "注解层列表"
+
+msgid "List Annotation"
+msgstr "注解列表"
+
+msgid "Login count"
+msgstr "登陆计数"
+
+msgid "Failed login count"
+msgstr "失败登陆计数"
+
+msgid "Filter by user"
+msgstr "根据用户过滤"
+
+msgid "Filter by database"
+msgstr "根据数据库过滤"
+
+msgid "Query search string"
+msgstr "查询检索文本"
+
+msgid "Filter by status"
+msgstr "根据状态过滤"
+
+msgid "state"
+msgstr "状态"
+
+msgid "db"
+msgstr "数据库"
+
+msgid "progress"
+msgstr "进度"
+
+msgid "querylink"
+msgstr "查询链接"
+
+msgid "now"
+msgstr "现在"
+
+msgid "1 hour ago"
+msgstr "1 小时前"
+
+msgid "1 day ago"
+msgstr "1 天前"
+
+msgid "28 days ago"
+msgstr "28 天前"
+
+msgid "90 days ago"
+msgstr "90 天前"
+
+msgid "1 year ago"
+msgstr "1 年前"
+
+msgid "success"
+msgstr "成功"
+
+msgid "failed"
+msgstr "失败"
+
+msgid "running"
+msgstr "正在运行"
+
+msgid "offline"
+msgstr "下线"
+
+msgid "pending"
+msgstr "等待"
+
+msgid "Select All"
+msgstr "全选"
+
+msgid "Ignore null locations"
+msgstr "忽略空位置"
+
+msgid "Whether to ignore locations that are null"
+msgstr "是否忽略空位置"

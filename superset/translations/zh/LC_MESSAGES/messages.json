@@ -94,7 +94,7 @@
       "Schema": [
         "模式"
       ],
-      "Specify a schema (if database flavour supports this).": [
+      "Specify a schema (if database flavor supports this).": [
         "指定一个Schema(需要数据库支持)"
       ],
       "Header Row": [
@@ -476,10 +476,10 @@
         "搜索结果"
       ],
       "[From]-": [
-        "[From]-"
+        "[从]-"
       ],
       "[To]-": [
-        "[To]-"
+        "[至]-"
       ],
       "[Query Status]": [
         "[查询状态]"
@@ -2956,7 +2956,7 @@
       "Table [{}] could not be found, please double check your database connection, schema, and table name": [
         "找不到 [{}] 表，请仔细检查您的数据库连接、Schema 和 表名"
       ],
-      "The table was created. As part of this two phase configuration process, you should now click the edit button by the new table to configure it.": [
+      "The table was created. As part of this two-phase configuration process, you should now click the edit button by the new table to configure it.": [
         "表被创建。作为这两个阶段配置过程的一部分，您现在应该单击新表的编辑按钮来配置它。"
       ],
       "Refresh Metadata": [
@@ -3029,7 +3029,7 @@
         "确定删除全部？"
       ],
       "This endpoint requires the `all_datasource_access` permission": [
-        "这个端点需要“all_datasource_access”的权限"
+        "此端点需要“all_datasource_access”权限"
       ],
       "The datasource seems to have been deleted": [
         "数据源已经被删除"
@@ -3048,9 +3048,6 @@
       ],
       "This view requires the database %(name)s or `all_datasource_access` permission": [
         "此视图需要数据库 %(name)s或“all_datasource_access”权限"
-      ],
-      "This endpoint requires the datasource %(name)s, database or `all_datasource_access` permission": [
-        "此端点需要数据源 %(name)s、数据库或“all_datasource_access”权限"
       ],
       "List Databases": [
         "数据库列表"
@@ -3193,7 +3190,7 @@
       "This json object describes the positioning of the widgets in the dashboard. It is dynamically generated when adjusting the widgets size and positions by using drag & drop in the dashboard view": [
         "这个JSON对象描述了部件在看板中的位置。它是动态生成的，可以通过拖放，在看板中调整整部件的大小和位置"
       ],
-      "The css for individual dashboards can be altered here, or in the dashboard view where changes are immediately visible": [
+      "The CSS for individual dashboards can be altered here, or in the dashboard view where changes are immediately visible": [
         "可以在这里或者在看板视图修改单个看板的CSS样式"
       ],
       "To get a readable URL for your dashboard": [
@@ -3330,6 +3327,333 @@
       ],
       "Saved Queries": [
         "已保存查询"
+      ],
+      "Chart Cache Timeout": [
+        "表缓存超时"
+      ],
+      "Duration (in seconds) of the caching timeout for charts of this database. A timeout of 0 indicates that the cache never expires. Note this defaults to the global timeout if undefined.": [
+        "此数据库图表的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为全局超时。"
+      ],
+      "Allow Csv Upload": [
+        "允许Csv上传"
+      ],
+      "If selected, please set the schemas allowed for csv upload in Extra.": [
+        "如果选择，请额外设置csv上传允许的模式。"
+      ],
+      "Asynchronous Query Execution": [
+        "异步执行查询"
+      ],
+      "Operate the database in asynchronous mode, meaning  that the queries are executed on remote workers as opposed to on the web server itself. This assumes that you have a Celery worker setup as well as a results backend. Refer to the installation docs for more information.": [
+        "以异步模式操作数据库，这意味着查询是在远程工作人员上执行的，而不是在web服务器本身上执行的, 这假设您有一个Celery worker setup以及一个结果后端。有关更多信息，请参考安装文档。"
+      ],
+      "Import a table definition": [
+        "导入一个已定义的表"
+      ],
+      "Duration (in seconds) of the caching timeout for this table. A timeout of 0 indicates that the cache never expires. Note this defaults to the database timeout if undefined.": [
+        "此表的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为数据库的超时。"
+      ],
+      "Duration (in seconds) of the caching timeout for this chart. Note this defaults to the datasource/table timeout if undefined.": [
+        "此图表的缓存超时持续时间(以秒为单位)。注意，如果未定义，这默认为数据源/表超时。"
+      ],
+      "Duration (in seconds) of the caching timeout for this cluster. A timeout of 0 indicates that the cache never expires. Note this defaults to the global timeout if undefined.": [
+        "此集群的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为全局超时。"
+      ],
+      "Duration (in seconds) of the caching timeout for this datasource. A timeout of 0 indicates that the cache never expires. Note this defaults to the cluster timeout if undefined.": [
+        "此数据源的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为集群超时。"
+      ],
+      "Layer Configuration": [
+        "配置Layer"
+      ],
+      "Configure the basics of your Annotation Layer.": [
+        "注释层基本配置"
+      ],
+      "Mandatory": [
+        "必填参数"
+      ],
+      "Hide Layer": [
+        "隐藏Layer"
+      ],
+      "Annotation Layer Type": [
+        "注释层类型"
+      ],
+      "Choose the Annotation Layer Type": [
+        "选择注释层类型"
+      ],
+      "Display configuration": [
+        "显示配置"
+      ],
+      "Style": [
+        "风格"
+      ],
+      "Configure your how you overlay is displayed here.": [
+        "配置如何在这里显示您的覆盖。"
+      ],
+      "Line Width": [
+        "线宽"
+      ],
+      "Slice": [
+        "切片"
+      ],
+      "An error occurred while fethching Dashboards": [
+        "当查询看板时候出错"
+      ],
+      "Published": [
+        "已发布"
+      ],
+      "Filter Results": [
+        "过滤结果"
+      ],
+      "Favorited": [
+        "已收藏"
+      ],
+      "New": [
+        "新建"
+      ],
+      "Filter List": [
+        "过滤条件"
+      ],
+      "View query": [
+        "查看查询"
+      ],
+      "View results": [
+        "查看结果"
+      ],
+      "View samples": [
+        "查看样例"
+      ],
+      "Run in SQL Lab": [
+        "在 SQL Lab 中执行"
+      ],
+      "No data": [
+        "没有数据"
+      ],
+      "rows": [
+        "行"
+      ],
+      "Time range": [
+        "时间范围"
+      ],
+      "Ok": [
+        "确认"
+      ],
+      "parameters": [
+        "参数"
+      ],
+      "Data": [
+        "数据"
+      ],
+      "Customize": [
+        "自定义"
+      ],
+      "Defaults": [
+        "默认"
+      ],
+      "Custom": [
+        "自定义"
+      ],
+      "custom_start_end": [
+        "自定义起始时间"
+      ],
+      "custom_range": [
+        "自定义区间"
+      ],
+      "Last": [
+        "之前"
+      ],
+      "Next": [
+        "之后"
+      ],
+      "Last day": [
+        "昨天"
+      ],
+      "Last week": [
+        "上周"
+      ],
+      "Last month": [
+        "上个月"
+      ],
+      "Last quarter": [
+        "上个季度"
+      ],
+      "Last year": [
+        "去年"
+      ],
+      "No filter": [
+        "无筛选"
+      ],
+      "Superset supports smart date parsing. Strings like `last sunday` or `last october` can be used.": [
+        "Superset支持智能的时间格式化。文本类似 `last sunday` 或者 `last october`这样的语句也可以被识别。"
+      ],
+      "seconds": [
+        "秒"
+      ],
+      "minutes": [
+        "分钟"
+      ],
+      "hours": [
+        "小时"
+      ],
+      "days": [
+        "天"
+      ],
+      "weeks": [
+        "周"
+      ],
+      "months": [
+        "月"
+      ],
+      "years": [
+        "年"
+      ],
+      "Start / end": [
+        "开始 / 结束"
+      ],
+      "Relative to today": [
+        "相对于今天"
+      ],
+      "Draft": [
+        "草稿"
+      ],
+      "Share dashboard": [
+        "分享看板"
+      ],
+      "Share chart": [
+        "分享图表"
+      ],
+      "Insert components": [
+        "插入组件"
+      ],
+      "Colors": [
+        "颜色"
+      ],
+      "Save changes": [
+        "保存改变"
+      ],
+      "Switch to view mode": [
+        "切换视图模式"
+      ],
+      "Force refresh dashboard": [
+        "强制刷新看板"
+      ],
+      "Force refresh": [
+        "强制刷新"
+      ],
+      "Superset Dashboard": [
+        "Superset 看板"
+      ],
+      "Check out this dashboard: ": [
+        "查看此看板："
+      ],
+      "Discard changes": [
+        "放弃更改"
+      ],
+      "Set auto-refresh interval": [
+        "设置自动刷新间隔"
+      ],
+      "Auto-refresh dashboard": [
+        "自动刷新看板"
+      ],
+      "Edit dashboard metadata": [
+        "编辑看板元数据"
+      ],
+      "Edit dashboard": [
+        "编辑看板"
+      ],
+      "Edit chart metadata": [
+        "编辑图表元数据"
+      ],
+      "Cached %s": [
+        "缓存 %s"
+      ],
+      "Fetched %s": [
+        "在 %s 之前获取"
+      ],
+      "Upload": [
+        "上传"
+      ],
+      "Choose File": [
+        "选择文件"
+      ],
+      "List Query": [
+        "查询列表"
+      ],
+      "List Annotation Layer": [
+        "注解层列表"
+      ],
+      "List Annotation": [
+        "注解列表"
+      ],
+      "Login count": [
+        "登陆计数"
+      ],
+      "Failed login count": [
+        "失败登陆计数"
+      ],
+      "Filter by user": [
+        "根据用户过滤"
+      ],
+      "Filter by database": [
+        "根据数据库过滤"
+      ],
+      "Query search string": [
+        "查询检索文本"
+      ],
+      "Filter by status": [
+        "根据状态过滤"
+      ],
+      "state": [
+        "状态"
+      ],
+      "db": [
+        "数据库"
+      ],
+      "progress": [
+        "进度"
+      ],
+      "querylink": [
+        "查询链接"
+      ],
+      "now": [
+        "现在"
+      ],
+      "1 hour ago": [
+        "1 小时前"
+      ],
+      "1 day ago": [
+        "1 天前"
+      ],
+      "28 days ago": [
+        "28 天前"
+      ],
+      "90 days ago": [
+        "90 天前"
+      ],
+      "1 year ago": [
+        "1 年前"
+      ],
+      "success": [
+        "成功"
+      ],
+      "failed": [
+        "失败"
+      ],
+      "running": [
+        "正在运行"
+      ],
+      "offline": [
+        "下线"
+      ],
+      "pending": [
+        "等待"
+      ],
+      "Select All": [
+        "全选"
+      ],
+      "Ignore null locations": [
+        "忽略空位置"
+      ],
+      "Whether to ignore locations that are null": [
+        "是否忽略空位置"
       ]
     }
   }

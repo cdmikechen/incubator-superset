@@ -65,6 +65,10 @@ export default function setupApp() {
           location.reload();
         });
     });
+    let url = location.href;
+    if (url.indexOf('preselect_filters') === -1) {
+      $('body header').css('display','block');
+    }
   });
 
   // A set of hacks to allow apps to run within a FAB template

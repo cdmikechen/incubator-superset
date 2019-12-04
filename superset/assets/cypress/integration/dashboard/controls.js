@@ -18,6 +18,7 @@
  */
 import { WORLD_HEALTH_DASHBOARD } from './dashboard.helper';
 import readResponseBlob from '../../utils/readResponseBlob';
+import { t } from '@superset-ui/translation';
 
 export default () => describe('top-level controls', () => {
   const sliceRequests = [];
@@ -61,7 +62,7 @@ export default () => describe('top-level controls', () => {
 
     // not allow dashboard level force refresh when any chart is loading
     cy.get('#save-dash-split-button').trigger('click', { forece: true });
-    cy.contains('Force refresh dashboard').parent().should('have.class', 'disabled');
+    cy.contains(t('Force refresh dashboard')).parent().should('have.class', 'disabled');
     // not allow chart level force refresh when it is loading
     cy.get(`#slice_${mapId}-controls`).next()
       .find('.refresh-tooltip')
@@ -71,21 +72,21 @@ export default () => describe('top-level controls', () => {
 
     cy.wait(`@postJson_${mapId}_force`);
     cy.get('#save-dash-split-button').trigger('click');
-    cy.contains('Force refresh dashboard').parent().not('have.class', 'disabled');
+    cy.contains(t('Force refresh dashboard')).parent().not('have.class', 'disabled');
   });
 
   it('should allow dashboard level force refresh', () => {
     // when charts are not start loading, for example, under a secondary tab,
     // should allow force refresh
     cy.get('#save-dash-split-button').trigger('click');
-    cy.contains('Force refresh dashboard').parent().not('have.class', 'disabled');
+    cy.contains(t('Force refresh dashboard')).parent().not('have.class', 'disabled');
 
     // wait the all dash finish loading.
     cy.wait(sliceRequests);
     cy.get('#save-dash-split-button').trigger('click');
-    cy.contains('Force refresh dashboard').trigger('click', { force: true });
+    cy.contains(t('Force refresh dashboard')).trigger('click', { force: true });
     cy.get('#save-dash-split-button').trigger('click');
-    cy.contains('Force refresh dashboard').parent().should('have.class', 'disabled');
+    cy.contains(t('Force refresh dashboard')).parent().should('have.class', 'disabled');
 
     // wait all charts force refreshed
     cy.wait(forceRefreshRequests).then((xhrs) => {
@@ -98,6 +99,6 @@ export default () => describe('top-level controls', () => {
     });
 
     cy.get('#save-dash-split-button').trigger('click');
-    cy.contains('Force refresh dashboard').parent().not('have.class', 'disabled');
+    cy.contains(t('Force refresh dashboard')).parent().not('have.class', 'disabled');
   });
 });

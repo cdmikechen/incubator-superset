@@ -77,7 +77,7 @@ export default class PublishedStatus extends React.Component {
                 this.togglePublished();
               }}
             >
-              Draft
+              {t('Draft')}
             </button>
           </TooltipWrapper>
         );
@@ -107,7 +107,7 @@ export default class PublishedStatus extends React.Component {
               this.togglePublished();
             }}
           >
-            Published
+            {t('Published')}
           </button>
         </TooltipWrapper>
       );

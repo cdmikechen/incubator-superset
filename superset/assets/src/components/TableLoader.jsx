@@ -80,11 +80,25 @@ class TableLoader extends React.PureComponent {
     delete tableProps.mutator;
     delete tableProps.columns;
 
+    let colShow = []
+    columns.map((col) => {
+      let label = t(col)
+      if (label == col) {
+        label = t(col.charAt(0).toUpperCase() + col.slice(1))
+      }
+      colShow.push({
+        key: col,
+        label: label
+      })
+    });
+    //-- console.log(colShow)
+
     return (
       <Table
         {...tableProps}
         className="table"
         itemsPerPage={50}
+        columns={colShow}
         style={{ textTransform: 'capitalize' }}
       >
         {this.state.data.map((row, i) => (
