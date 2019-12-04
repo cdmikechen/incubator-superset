@@ -53,6 +53,11 @@ class DashboardTable extends React.PureComponent {
 
   render() {
     if (this.state.dashboards.length > 0) {
+      let cols = [
+        { key: 'dashboard', label: t('Dashboard') },
+        { key: 'creator', label: t('Creator') },
+        { key: 'modified', label: t('Modified') },
+      ]
       return (
         <Table
           className="table"
@@ -61,11 +66,7 @@ class DashboardTable extends React.PureComponent {
           filterable={['dashboard', 'creator']}
           itemsPerPage={50}
           hideFilterInput
-          columns={[
-            { key: 'dashboard', label: 'Dashboard' },
-            { key: 'creator', label: 'Creator' },
-            { key: 'modified', label: 'Modified' },
-          ]}
+          columns={cols}
           defaultSort={{ column: 'modified', direction: 'desc' }}
         >
           {this.state.dashboards.map(o => (

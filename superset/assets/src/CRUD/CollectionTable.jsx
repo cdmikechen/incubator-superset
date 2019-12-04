@@ -43,7 +43,7 @@ const defaultProps = {
   itemRenderers: {},
   columnLabels: {},
   allowDeletes: false,
-  emptyMessage: 'No entries',
+  emptyMessage: t('No entries'),
   allowAddItem: false,
   itemGenerator: () => ({}),
   expandFieldset: null,

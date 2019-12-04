@@ -341,7 +341,7 @@ export default class DateFilterControl extends React.Component {
         eventKey={grain}
         active={grain === this.state.grain}
       >
-        {grain}
+        {t(grain)}
       </MenuItem>
       ));
     const timeFrames = COMMON_TIME_FRAMES.map((timeFrame) => {
@@ -362,7 +362,7 @@ export default class DateFilterControl extends React.Component {
               checked={this.state.common === timeFrame}
               onChange={() => this.setState(nextState)}
             >
-              {timeFrame}
+              {t(timeFrame)}
             </Radio>
           </div>
         </OverlayTrigger>
@@ -377,13 +377,13 @@ export default class DateFilterControl extends React.Component {
             className="time-filter-tabs"
             onSelect={this.changeTab}
           >
-            <Tab eventKey={1} title="Defaults">
+            <Tab eventKey={1} title={t('Defaults')}>
               <FormGroup>{timeFrames}</FormGroup>
             </Tab>
-            <Tab eventKey={2} title="Custom">
+            <Tab eventKey={2} title={t('Custom')}>
               <FormGroup>
                 <PopoverSection
-                  title="Relative to today"
+                  title={t('Relative to today')}
                   isSelected={this.state.type === TYPES.CUSTOM_RANGE}
                   onSelect={this.setTypeCustomRange}
                 >
@@ -393,7 +393,7 @@ export default class DateFilterControl extends React.Component {
                         bsSize="small"
                         componentClass={InputGroup.Button}
                         id="input-dropdown-rel"
-                        title={this.state.rel}
+                        title={this.state.rel ? t(this.state.rel) : this.state.rel}
                         onFocus={this.setTypeCustomRange}
                       >
                         <MenuItem
@@ -401,14 +401,14 @@ export default class DateFilterControl extends React.Component {
                           key={RELATIVE_TIME_OPTIONS.LAST}
                           eventKey={RELATIVE_TIME_OPTIONS.LAST}
                           active={this.state.rel === RELATIVE_TIME_OPTIONS.LAST}
-                        >Last
+                        >{t('Last')}
                         </MenuItem>
                         <MenuItem
                           onSelect={value => this.setCustomRange('rel', value)}
                           key={RELATIVE_TIME_OPTIONS.NEXT}
                           eventKey={RELATIVE_TIME_OPTIONS.NEXT}
                           active={this.state.rel === RELATIVE_TIME_OPTIONS.NEXT}
-                        >Next
+                        >{t('Next')}
                         </MenuItem>
                       </DropdownButton>
                     </div>
@@ -428,7 +428,7 @@ export default class DateFilterControl extends React.Component {
                         bsSize="small"
                         componentClass={InputGroup.Button}
                         id="input-dropdown-grain"
-                        title={this.state.grain}
+                        title={this.state.grain ? t(this.state.grain) : this.state.grain}
                         onFocus={this.setTypeCustomRange}
                       >
                         {grainOptions}
@@ -437,7 +437,7 @@ export default class DateFilterControl extends React.Component {
                   </div>
                 </PopoverSection>
                 <PopoverSection
-                  title="Start / end"
+                  title={t('Start / end')}
                   isSelected={this.state.type === TYPES.CUSTOM_START_END}
                   onSelect={this.setTypeCustomStartEnd}
                   info={FREEFORM_TOOLTIP}
@@ -485,7 +485,7 @@ export default class DateFilterControl extends React.Component {
               bsStyle="primary"
               onClick={this.close}
             >
-              Ok
+              {t('Ok')}
             </Button>
           </div>
         </div>
@@ -508,7 +508,7 @@ export default class DateFilterControl extends React.Component {
           overlay={this.renderPopover()}
           onClick={this.handleClickTrigger}
         >
-          <Label name="popover-trigger" style={{ cursor: 'pointer' }}>{value}</Label>
+          <Label name="popover-trigger" style={{ cursor: 'pointer' }}>{t(value)}</Label>
         </OverlayTrigger>
       </div>
     );

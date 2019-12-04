@@ -24,7 +24,7 @@
   {% include "superset/flash_wrapper.html" %}
 
   <div class="container">
-    <h1>Import dashboards</h1>
+    <h1>{{ _("Import dashboards") }}</h1>
 
     <form method="post" enctype="multipart/form-data">
       <input
@@ -40,12 +40,12 @@
             name="file"
             style="display:none;"
             onchange="$('#upload-file-info').html(this.files[0].name)"/>
-          Choose File
+            {{ _("Choose File") }}
         </label>
         <span class='label label-info' id="upload-file-info"></span>
         <br/>
         <br/>
-        <input type="submit" value="Upload" class="btn btn-primary btn-sm" />
+        <input type="submit" value="{{ _('Upload') }}" class="btn btn-primary btn-sm" />
       </p>
     </form>
   </div>

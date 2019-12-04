@@ -20,6 +20,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Mousetrap from 'mousetrap';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
+import { t } from '@superset-ui/translation';
 
 const propTypes = {
   hotkeys: PropTypes.arrayOf(PropTypes.shape({
@@ -50,14 +51,14 @@ export default class Hotkeys extends React.PureComponent {
         <table className="table table-condensed">
           <thead>
             <tr>
-              <th>Key</th>
-              <th>Action</th>
+              <th>{t('Key')}</th>
+              <th>{t('Action')}</th>
             </tr>
           </thead>
           <tbody>
             {hotkeys.map(({ key, descr }) => (
               <tr key={key}>
-                <td><code>{key}</code></td>
+                <td><code>{t(key)}</code></td>
                 <td>{descr}</td>
               </tr>
             ))}

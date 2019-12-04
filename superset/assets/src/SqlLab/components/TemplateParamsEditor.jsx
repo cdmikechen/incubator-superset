@@ -92,7 +92,7 @@ export default class TemplateParamsEditor extends React.Component {
           rel="noopener noreferrer"
         >
           Jinja templating
-        </a> syntax.
+        </a> {t('syntax.')}
       </p>
     );
   }

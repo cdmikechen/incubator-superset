@@ -94,7 +94,7 @@
       "Schema": [
         "模式"
       ],
-      "Specify a schema (if database flavour supports this).": [
+      "Specify a schema (if database flavor supports this).": [
         "指定一个Schema(需要数据库支持)"
       ],
       "Header Row": [
@@ -272,7 +272,7 @@
         "请在左右轴上选择不同的指标"
       ],
       "Time Series - Bar Chart": [
-        "时间序列 - 柱状图"
+        "时间序列-面积图"
       ],
       "Time Series - Period Pivot": [
         "时间序列 - 周期透视表"
@@ -419,7 +419,7 @@
         "查询被终止。"
       ],
       "Failed at stopping query.": [
-        "停止查询失败。"
+        "无法终止查询。"
       ],
       "Error occurred while fetching table metadata": [
         "获取表格元数据时发生错误"
@@ -476,10 +476,10 @@
         "搜索结果"
       ],
       "[From]-": [
-        "[From]-"
+        "[从]-"
       ],
       "[To]-": [
-        "[To]-"
+        "[至]-"
       ],
       "[Query Status]": [
         "[查询状态]"
@@ -491,7 +491,7 @@
         "在 SQL 编辑器中打开"
       ],
       "view results": [
-        "查看结果"
+        "展示结果"
       ],
       "Data preview": [
         "数据预览"
@@ -782,7 +782,7 @@
         "点击编辑标题"
       ],
       "You don't have the rights to alter this title.": [
-        "你没有权利改变这个标题。"
+        "你无权更改此标题。"
       ],
       "Click to favorite/unfavorite": [
         "点击 收藏/取消收藏"
@@ -1358,7 +1358,7 @@
         "限制显示的时间序列的数量。应用子查询（或者不支持子查询）来限制获取和显示的时间序列的数量。在高基数维度（S）分组时，此特性是有用的。"
       ],
       "Sort By": [
-        "Sort By（以什么排序）"
+        "排序："
       ],
       "Metric used to define the top series": [
         "用于定义顶级序列的指标"
@@ -2956,7 +2956,7 @@
       "Table [{}] could not be found, please double check your database connection, schema, and table name": [
         "找不到 [{}] 表，请仔细检查您的数据库连接、Schema 和 表名"
       ],
-      "The table was created. As part of this two phase configuration process, you should now click the edit button by the new table to configure it.": [
+      "The table was created. As part of this two-phase configuration process, you should now click the edit button by the new table to configure it.": [
         "表被创建。作为这两个阶段配置过程的一部分，您现在应该单击新表的编辑按钮来配置它。"
       ],
       "Refresh Metadata": [
@@ -3029,7 +3029,7 @@
         "确定删除全部？"
       ],
       "This endpoint requires the `all_datasource_access` permission": [
-        "这个端点需要“all_datasource_access”的权限"
+        "此端点需要“all_datasource_access”权限"
       ],
       "The datasource seems to have been deleted": [
         "数据源已经被删除"
@@ -3048,9 +3048,6 @@
       ],
       "This view requires the database %(name)s or `all_datasource_access` permission": [
         "此视图需要数据库 %(name)s或“all_datasource_access”权限"
-      ],
-      "This endpoint requires the datasource %(name)s, database or `all_datasource_access` permission": [
-        "此端点需要数据源 %(name)s、数据库或“all_datasource_access”权限"
       ],
       "List Databases": [
         "数据库列表"
@@ -3193,7 +3190,7 @@
       "This json object describes the positioning of the widgets in the dashboard. It is dynamically generated when adjusting the widgets size and positions by using drag & drop in the dashboard view": [
         "这个JSON对象描述了部件在看板中的位置。它是动态生成的，可以通过拖放，在看板中调整整部件的大小和位置"
       ],
-      "The css for individual dashboards can be altered here, or in the dashboard view where changes are immediately visible": [
+      "The CSS for individual dashboards can be altered here, or in the dashboard view where changes are immediately visible": [
         "可以在这里或者在看板视图修改单个看板的CSS样式"
       ],
       "To get a readable URL for your dashboard": [
@@ -3323,13 +3320,619 @@
         "编辑保存的查询"
       ],
       "Pop Tab Link": [
-        "弹出标签链接"
+        "流行标签链接"
       ],
       "Changed on": [
         "改变为"
       ],
       "Saved Queries": [
         "已保存查询"
+      ],
+      "Chart Cache Timeout": [
+        "表缓存超时"
+      ],
+      "Duration (in seconds) of the caching timeout for charts of this database. A timeout of 0 indicates that the cache never expires. Note this defaults to the global timeout if undefined.": [
+        "此数据库图表的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为全局超时。"
+      ],
+      "Allow Csv Upload": [
+        "允许Csv上传"
+      ],
+      "If selected, please set the schemas allowed for csv upload in Extra.": [
+        "如果选择，请额外设置csv上传允许的模式。"
+      ],
+      "Asynchronous Query Execution": [
+        "异步执行查询"
+      ],
+      "Operate the database in asynchronous mode, meaning  that the queries are executed on remote workers as opposed to on the web server itself. This assumes that you have a Celery worker setup as well as a results backend. Refer to the installation docs for more information.": [
+        "以异步模式操作数据库，这意味着查询是在远程工作人员上执行的，而不是在web服务器本身上执行的, 这假设您有一个Celery worker setup以及一个结果后端。有关更多信息，请参考安装文档。"
+      ],
+      "Import a table definition": [
+        "导入一个已定义的表"
+      ],
+      "Duration (in seconds) of the caching timeout for this table. A timeout of 0 indicates that the cache never expires. Note this defaults to the database timeout if undefined.": [
+        "此表的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为数据库的超时。"
+      ],
+      "Duration (in seconds) of the caching timeout for this chart. Note this defaults to the datasource/table timeout if undefined.": [
+        "此图表的缓存超时持续时间(以秒为单位)。注意，如果未定义，这默认为数据源/表超时。"
+      ],
+      "Duration (in seconds) of the caching timeout for this cluster. A timeout of 0 indicates that the cache never expires. Note this defaults to the global timeout if undefined.": [
+        "此集群的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为全局超时。"
+      ],
+      "Duration (in seconds) of the caching timeout for this datasource. A timeout of 0 indicates that the cache never expires. Note this defaults to the cluster timeout if undefined.": [
+        "此数据源的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为集群超时。"
+      ],
+      "Layer Configuration": [
+        "配置Layer"
+      ],
+      "Configure the basics of your Annotation Layer.": [
+        "注释层基本配置"
+      ],
+      "Mandatory": [
+        "必填参数"
+      ],
+      "Hide Layer": [
+        "隐藏Layer"
+      ],
+      "Annotation Layer Type": [
+        "注释层类型"
+      ],
+      "Choose the Annotation Layer Type": [
+        "选择注释层类型"
+      ],
+      "Display configuration": [
+        "显示配置"
+      ],
+      "Style": [
+        "风格"
+      ],
+      "Configure your how you overlay is displayed here.": [
+        "配置如何在这里显示您的覆盖。"
+      ],
+      "Line Width": [
+        "线宽"
+      ],
+      "Slice": [
+        "切片"
+      ],
+      "An error occurred while fethching Dashboards": [
+        "当查询看板时候出错"
+      ],
+      "Published": [
+        "已发布"
+      ],
+      "Filter Results": [
+        "过滤结果"
+      ],
+      "Favorited": [
+        "已收藏"
+      ],
+      "New": [
+        "新建"
+      ],
+      "Filter List": [
+        "过滤条件"
+      ],
+      "View query": [
+        "查看查询"
+      ],
+      "View results": [
+        "查看结果"
+      ],
+      "View samples": [
+        "查看样例"
+      ],
+      "Run in SQL Lab": [
+        "在 SQL Lab 中执行"
+      ],
+      "No data": [
+        "没有数据"
+      ],
+      "rows": [
+        "行"
+      ],
+      "Time range": [
+        "时间范围"
+      ],
+      "Ok": [
+        "确认"
+      ],
+      "parameters": [
+        "参数"
+      ],
+      "Data": [
+        "数据"
+      ],
+      "Customize": [
+        "自定义"
+      ],
+      "Defaults": [
+        "默认"
+      ],
+      "Custom": [
+        "自定义"
+      ],
+      "custom_start_end": [
+        "自定义起始时间"
+      ],
+      "custom_range": [
+        "自定义区间"
+      ],
+      "Last": [
+        "之前"
+      ],
+      "Next": [
+        "之后"
+      ],
+      "Last day": [
+        "昨天"
+      ],
+      "Last week": [
+        "上周"
+      ],
+      "Last month": [
+        "上个月"
+      ],
+      "Last quarter": [
+        "上个季度"
+      ],
+      "Last year": [
+        "去年"
+      ],
+      "No filter": [
+        "无筛选"
+      ],
+      "Superset supports smart date parsing. Strings like `last sunday` or `last october` can be used.": [
+        "Superset支持智能的时间格式化。文本类似 `last sunday` 或者 `last october`这样的语句也可以被识别。"
+      ],
+      "seconds": [
+        "秒"
+      ],
+      "minutes": [
+        "分钟"
+      ],
+      "hours": [
+        "小时"
+      ],
+      "days": [
+        "天"
+      ],
+      "weeks": [
+        "周"
+      ],
+      "months": [
+        "月"
+      ],
+      "years": [
+        "年"
+      ],
+      "Start / end": [
+        "开始 / 结束"
+      ],
+      "Relative to today": [
+        "相对于今天"
+      ],
+      "Draft": [
+        "草稿"
+      ],
+      "Share dashboard": [
+        "分享看板"
+      ],
+      "Share chart": [
+        "分享图表"
+      ],
+      "Insert components": [
+        "插入组件"
+      ],
+      "Colors": [
+        "颜色"
+      ],
+      "Save changes": [
+        "保存改变"
+      ],
+      "Switch to view mode": [
+        "切换视图模式"
+      ],
+      "Force refresh dashboard": [
+        "强制刷新看板"
+      ],
+      "Force refresh": [
+        "强制刷新"
+      ],
+      "Superset Dashboard": [
+        "Superset 看板"
+      ],
+      "Check out this dashboard: ": [
+        "查看此看板："
+      ],
+      "Discard changes": [
+        "放弃更改"
+      ],
+      "Set auto-refresh interval": [
+        "设置自动刷新间隔"
+      ],
+      "Auto-refresh dashboard": [
+        "自动刷新看板"
+      ],
+      "Edit dashboard metadata": [
+        "编辑看板元数据"
+      ],
+      "Edit dashboard": [
+        "编辑看板"
+      ],
+      "Edit chart metadata": [
+        "编辑图表元数据"
+      ],
+      "Cached %s": [
+        "缓存 %s"
+      ],
+      "Fetched %s": [
+        "在 %s 之前获取"
+      ],
+      "Upload": [
+        "上传"
+      ],
+      "Choose File": [
+        "选择文件"
+      ],
+      "List Query": [
+        "查询列表"
+      ],
+      "List Annotation Layer": [
+        "注解层列表"
+      ],
+      "List Annotation": [
+        "注解列表"
+      ],
+      "Login count": [
+        "登陆计数"
+      ],
+      "Failed login count": [
+        "失败登陆计数"
+      ],
+      "Filter by user": [
+        "根据用户过滤"
+      ],
+      "Filter by database": [
+        "根据数据库过滤"
+      ],
+      "Query search string": [
+        "查询检索文本"
+      ],
+      "Filter by status": [
+        "根据状态过滤"
+      ],
+      "state": [
+        "状态"
+      ],
+      "db": [
+        "数据库"
+      ],
+      "progress": [
+        "进度"
+      ],
+      "querylink": [
+        "查询链接"
+      ],
+      "now": [
+        "现在"
+      ],
+      "1 hour ago": [
+        "1 小时前"
+      ],
+      "1 day ago": [
+        "1 天前"
+      ],
+      "28 days ago": [
+        "28 天前"
+      ],
+      "90 days ago": [
+        "90 天前"
+      ],
+      "1 year ago": [
+        "1 年前"
+      ],
+      "success": [
+        "成功"
+      ],
+      "failed": [
+        "失败"
+      ],
+      "running": [
+        "正在运行"
+      ],
+      "offline": [
+        "下线"
+      ],
+      "pending": [
+        "等待"
+      ],
+      "Select All": [
+        "全选"
+      ],
+      "Ignore null locations": [
+        "忽略空位置"
+      ],
+      "Whether to ignore locations that are null": [
+        "是否忽略空位置"
+      ],
+      "See table schema": [
+        "查看表结构"
+      ],
+      "Assign a set of parameters as": [
+        "在下面指定一组参数，结构类似"
+      ],
+      "below (example:": [
+        "（例如："
+      ],
+      "), and they become available in your SQL (example:": [
+        "），并且他们可以在您的SQL中可用（例如："
+      ],
+      ") by using": [
+        "），这种方法通过使用"
+      ],
+      "syntax.": [
+        "来实现。"
+      ],
+      "Your charts & filters": [
+        "您的图表和过滤条件"
+      ],
+      "Your charts and filters": [
+        "您的图表和过滤条件"
+      ],
+      "Filter your charts": [
+        "过滤您的图表"
+      ],
+      "Tabs": [
+        "标签页(Tabs)"
+      ],
+      "Row": [
+        "行"
+      ],
+      "Header": [
+        "标题头(Header)"
+      ],
+      "Markdown": [
+        "Markdown"
+      ],
+      "Divider": [
+        "分割线"
+      ],
+      "Sort by": [
+        "排序："
+      ],
+      "Recent": [
+        "最近"
+      ],
+      "Vis type": [
+        "视图类型"
+      ],
+      "Determines whether or not this dashboard is visible in the list of all dashboards": [
+        "确定此看板是否在所有看板列表中可见"
+      ],
+      "all": [
+        "所有"
+      ],
+      "week starting Sunday": [
+        "以周日开始一周"
+      ],
+      "week ending Saturday": [
+        "以周六结束一周"
+      ],
+      "6 hour": [
+        "6小时"
+      ],
+      "5 seconds": [
+        "5秒"
+      ],
+      "1 day": [
+        "1天"
+      ],
+      "7 days": [
+        "7天"
+      ],
+      "Emit Filter Events": [
+        "触发筛选器事件"
+      ],
+      "Whether to apply filter when items are clicked": [
+        "单击选项时是否应用筛选器"
+      ],
+      "Whether to include a client-side search box": [
+        "是否包含客户端搜索框"
+      ],
+      "Adaptative formating": [
+        "自动匹配格式化"
+      ],
+      "Expand/collapse datasource configuration": [
+        "展开/折叠数据源配置"
+      ],
+      "Click to edit the datasource": [
+        "点击编辑数据源"
+      ],
+      "Datasource Editor for ": [
+        "数据源编辑器："
+      ],
+      "Use Legacy Datasource Editor": [
+        "使用原始数据源编辑器"
+      ],
+      "Settings": [
+        "设置"
+      ],
+      "This option is not yet available for views": [
+        "该选项针对视图并不可用"
+      ],
+      "Sync columns from source": [
+        "从数据源同步列"
+      ],
+      "Calculated Columns": [
+        "计算列"
+      ],
+      "Basic": [
+        "默认URL"
+      ],
+      "Default URL": [
+        "默认URL"
+      ],
+      "Default URL to redirect to when accessing from the datasource list page": [
+        "从数据源列表页访问时重定向到的默认URL"
+      ],
+      "Autocomplete filters": [
+        "自动筛选器"
+      ],
+      "Whether to populate autocomplete filters options": [
+        "是否填充自动筛选器选项"
+      ],
+      "Owners of the datasource": [
+        "数据源的所有者"
+      ],
+      "The JSON metric or post aggregation definition.": [
+        "JSON指标或预聚合定义。"
+      ],
+      "The duration of time in seconds before the cache is invalidated": [
+        "缓存失效前的持续时间（秒）。"
+      ],
+      "Hours offset": [
+        "小时偏移量"
+      ],
+      "Data Type": [
+        "数据类型"
+      ],
+      "Is Dimension": [
+        "维度字段"
+      ],
+      "Is Temporal": [
+        "临时字段"
+      ],
+      "Is Filterable": [
+        "可过滤"
+      ],
+      "No entries": [
+        "无结果"
+      ],
+      "Add Item": [
+        "添加项目"
+      ],
+      "Edit Datasource": [
+        "编辑数据源"
+      ],
+      "Change Datasource": [
+        "修改数据源"
+      ],
+      "Keyboard shortcuts": [
+        "键盘热键"
+      ],
+      "Key": [
+        "命令"
+      ],
+      "RUN": [
+        "执行"
+      ],
+      "SAVE": [
+        "保存"
+      ],
+      "default": [
+        "默认"
+      ],
+      "D3 format syntax: https://github.com/d3/d3-format": [
+        "D3格式语法：https://github.com/d3/d3-format"
+      ],
+      "Only applies when the \"Label Type\" is not set to a percentage.": [
+        "仅当“标签类型”未设置为百分比时才适用。"
+      ],
+      "click to edit": [
+        "点击编辑"
+      ],
+      "Chart [{}] has been saved": [
+        "图表 [{}] 已经保存"
+      ],
+      "Chart [{}] has been overwritten": [
+        "图表 [{}] 已经被覆盖"
+      ],
+      "Confirm save": [
+        "保存确认"
+      ],
+      "Are you sure you want to save and apply changes?": [
+        "您确定想要保存修改吗？"
+      ],
+      "The data source configuration exposed here affects all the charts using this datasource. Be mindful that changing settings here may affect other charts in undesirable ways.": [
+        "在这里对于数据源的配置会影响所有使用这个数据源的图表。需要注意改变这里的配置可能会以不可预期的方式影响其他图表。"
+      ],
+      "Line Chart": [
+        "多线图"
+      ],
+      "Bar Chart": [
+        "条形图"
+      ],
+      "Area Chart": [
+        "面积图"
+      ],
+      "deck.gl Polygon": [
+        ""
+      ],
+      "Time-series Table": [
+        "时间序列-表格"
+      ],
+      "deck.gl Scatterplot": [
+        "deck.gl 散点图"
+      ],
+      "deck.gl 3D Hexagon": [
+        "deck.gl 3D Hexagon"
+      ],
+      "Time-series Period Pivot": [
+        "时间序列-周期轴"
+      ],
+      "deck.gl Arc": [
+        "deck.gl Arc"
+      ],
+      "deck.gl Grid": [
+        "deck.gl Grid"
+      ],
+      "Dual Line Chart": [
+        "双线图"
+      ],
+      "Multiple Line Charts": [
+        "复合折线图"
+      ],
+      "Sunburst Chart": [
+        "旭日/太阳图"
+      ],
+      "Sankey Diagram": [
+        "桑基图"
+      ],
+      "MapBox": [
+        "MapBox"
+      ],
+      "Nightingale Rose Chart": [
+        "南丁格尔玫瑰图"
+      ],
+      "deck.gl Geojson": [
+        "deck.gl Geojson"
+      ],
+      "Horizon Chart": [
+        "地平线图"
+      ],
+      "deck.gl Multiple Layers": [
+        "deck.gl Multiple Layers"
+      ],
+      "Time-series Percent Change": [
+        "时间序列-百分比变化"
+      ],
+      "Partition Chart": [
+        "分区图"
+      ],
+      "Event Flow": [
+        "事件流"
+      ],
+      "deck.gl Path": [
+        "deck.gl Path"
+      ],
+      "Force-directed Graph": [
+        "力导向图"
+      ],
+      "Paired t-test Table": [
+        "配对T检测表"
+      ],
+      "IFrame": [
+        "IFrame"
       ]
     }
   }

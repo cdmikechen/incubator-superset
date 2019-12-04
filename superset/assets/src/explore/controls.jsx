@@ -75,7 +75,7 @@ const sequentialSchemeRegistry = getSequentialSchemeRegistry();
 
 const PRIMARY_COLOR = { r: 0, g: 122, b: 135, a: 1 };
 
-const D3_FORMAT_DOCS = 'D3 format syntax: https://github.com/d3/d3-format';
+const D3_FORMAT_DOCS = t('D3 format syntax: https://github.com/d3/d3-format');
 
 // input choices & options
 const D3_FORMAT_OPTIONS = [
@@ -814,7 +814,7 @@ export const controls = {
     type: 'SelectControl',
     freeForm: true,
     label: t('Time Granularity'),
-    default: 'one day',
+    default: '1 day',
     choices: [
       [null, 'all'],
       ['PT5S', '5 seconds'],

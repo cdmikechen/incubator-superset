@@ -152,7 +152,7 @@ msgstr "表名"
 
 #: superset/forms.py:57
 msgid "Name of table to be created from csv data."
-msgstr "从CSV数据将创建的表的名称."
+msgstr "从CSV数据创建的表的名称."
 
 #: superset/forms.py:61
 msgid "CSV File"
@@ -164,7 +164,7 @@ msgstr "选择一个CSV文件上传到数据库."
 
 #: superset/forms.py:64
 msgid "CSV Files Only!"
-msgstr "仅CSV文件！"
+msgstr "仅支持CSV文件！"
 
 #: superset/connectors/sqla/views.py:227 superset/forms.py:66
 #: superset/views/core.py:275 superset/views/sql_lab.py:24
@@ -741,11 +741,11 @@ msgstr "搜索结果"
 
 #: superset/assets/src/SqlLab/components/QuerySearch.jsx:177
 msgid "[From]-"
-msgstr "[From]-"
+msgstr "[从]-"
 
 #: superset/assets/src/SqlLab/components/QuerySearch.jsx:187
 msgid "[To]-"
-msgstr "[To]-"
+msgstr "[至]-"
 
 #: superset/assets/src/SqlLab/components/QuerySearch.jsx:196
 msgid "[Query Status]"
@@ -825,6 +825,7 @@ msgstr "运行选定的查询"
 
 #: superset/assets/src/SqlLab/components/RunQueryActionButton.jsx:21
 #: superset/assets/src/components/RefreshChartOverlay.jsx:26
+
 msgid "Run Query"
 msgstr "运行查询"
 
@@ -1205,12 +1206,12 @@ msgstr "%s%s"
 
 #: superset/assets/src/dashboard/components/CodeModal.jsx:35
 msgid "Active Dashboard Filters"
-msgstr "活跃的仪表板过滤器"
+msgstr "活跃的看板过滤器"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:120
 #, python-format
 msgid "Checkout this dashboard: %s"
-msgstr "查看这个仪表板：%s"
+msgstr "查看这个看板：%s"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:123
 #: superset/assets/src/explore/components/SaveModal.jsx:163
@@ -1223,7 +1224,7 @@ msgstr "强制刷新"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:132
 msgid "Force refresh the whole dashboard"
-msgstr "强制刷新整个仪表板"
+msgstr "强制刷新整个看板"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:140
 msgid "Set autorefresh"
@@ -1235,7 +1236,7 @@ msgstr "设置此会话的自动刷新间隔"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:156
 msgid "Save the dashboard"
-msgstr "保存仪表板"
+msgstr "保存看板"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:164
 msgid "Edit properties"
@@ -1243,7 +1244,7 @@ msgstr "编辑属性"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:165
 msgid "Edit the dashboards's properties"
-msgstr "编辑仪表板的属性"
+msgstr "编辑看板的属性"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:172
 msgid "Email"
@@ -1251,7 +1252,7 @@ msgstr "邮箱"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:173
 msgid "Email a link to this dashboard"
-msgstr "将这个仪表板链接通过Email发送"
+msgstr "将这个看板链接通过Email发送"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:185
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:196
@@ -1260,7 +1261,7 @@ msgstr "添加图表"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:186
 msgid "Add some charts to this dashboard"
-msgstr "在该仪表板中添加一些图表"
+msgstr "在该看板中添加一些图表"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:197
 msgid "Edit CSS"
@@ -1268,7 +1269,7 @@ msgstr "编辑CSS"
 
 #: superset/assets/src/dashboard/components/Controls.jsx:198
 msgid "Change the style of the dashboard using CSS code"
-msgstr "使用CSS代码更改仪表板的样式"
+msgstr "使用CSS代码更改看板的样式"
 
 #: superset/assets/src/dashboard/components/CssEditor.jsx:45
 msgid "Load a template"
@@ -1341,11 +1342,11 @@ msgstr "刷新间隔"
 
 #: superset/assets/src/dashboard/components/RefreshIntervalModal.jsx:46
 msgid "Choose the refresh frequency for this dashboard"
-msgstr "选择此仪表板的刷新频率"
+msgstr "选择此看板的刷新频率"
 
 #: superset/assets/src/dashboard/components/SaveModal.jsx:66
 msgid "This dashboard was saved successfully."
-msgstr "该仪表板已成功保存。"
+msgstr "该看板已成功保存。"
 
 #: superset/assets/src/dashboard/components/SaveModal.jsx:72
 msgid "Sorry, there was an error saving this dashboard: "
@@ -1357,16 +1358,16 @@ msgstr "异常"
 
 #: superset/assets/src/dashboard/components/SaveModal.jsx:96
 msgid "You must pick a name for the new dashboard"
-msgstr "您必须为新的仪表板选择一个名称"
+msgstr "您必须为新的看板选择一个名称"
 
 #: superset/assets/src/dashboard/components/SaveModal.jsx:111
 msgid "Save Dashboard"
-msgstr "保存仪表板"
+msgstr "保存看板"
 
 #: superset/assets/src/dashboard/components/SaveModal.jsx:119
 #, python-format
 msgid "Overwrite Dashboard [%s]"
-msgstr "覆盖仪表板 [%s]"
+msgstr "覆盖看板 [%s]"
 
 #: superset/assets/src/dashboard/components/SaveModal.jsx:127
 msgid "Save as:"
@@ -1379,11 +1380,11 @@ msgstr "[看板名称]"
 
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:73
 msgid "Sorry, there was an error fetching charts to this dashboard: "
-msgstr "抱歉，这个仪表板在获取图表时发生错误："
+msgstr "抱歉，这个看板在获取图表时发生错误："
 
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:93
 msgid "Sorry, there was an error adding charts to this dashboard: "
-msgstr "抱歉，这个仪表板在添加图表时发生错误："
+msgstr "抱歉，这个看板在添加图表时发生错误："
 
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:163
 #: superset/views/core.py:466
@@ -1409,11 +1410,11 @@ msgstr "已修改"
 
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:205
 msgid "Add a new chart to the dashboard"
-msgstr "在仪表板中添加新图表"
+msgstr "在看板中添加新图表"
 
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:211
 msgid "Add Charts to Dashboard"
-msgstr "在仪表板中添加图表"
+msgstr "在看板中添加图表"
 
 #: superset/assets/src/dashboard/components/SliceHeader.jsx:65
 #, python-format
@@ -1454,7 +1455,7 @@ msgstr "探索图表"
 
 #: superset/assets/src/dashboard/components/SliceHeader.jsx:169
 msgid "Remove chart from dashboard"
-msgstr "从仪表板中删除图表"
+msgstr "从看板中删除图表"
 
 #: superset/assets/src/explore/controls.jsx:85
 msgid ""
@@ -2048,7 +2049,7 @@ msgstr ""
 
 #: superset/assets/src/explore/controls.jsx:963
 msgid "Sort By"
-msgstr "Sort By（以什么排序）"
+msgstr "排序："
 
 #: superset/assets/src/explore/controls.jsx:965
 msgid "Metric used to define the top series"
@@ -3782,11 +3783,11 @@ msgstr "请输入图表名称"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:89
 msgid "Please select a dashboard"
-msgstr "请选择一个仪表板"
+msgstr "请选择一个看板"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:97
 msgid "Please enter a dashboard name"
-msgstr "请输入仪表板名称"
+msgstr "请输入看板名称"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:133
 msgid "Save A Chart"
@@ -3803,19 +3804,19 @@ msgstr "[图表名称]"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:180
 msgid "Do not add to a dashboard"
-msgstr "不要添加到仪表板"
+msgstr "不要添加到看板"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:188
 msgid "Add chart to existing dashboard"
-msgstr "将图表添加到现有仪表盘"
+msgstr "将图表添加到现有看板"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:204
 msgid "Add to new dashboard"
-msgstr "添加到新的仪表板"
+msgstr "添加到新的看板"
 
 #: superset/assets/src/explore/components/SaveModal.jsx:230
 msgid "Save & go to dashboard"
-msgstr "保存并转到仪表板"
+msgstr "保存并转到看板"
 
 #: superset/assets/src/explore/components/controls/AdhocFilterControl.jsx:241
 msgid "choose a column or metric"
@@ -4527,7 +4528,7 @@ msgstr "没有找到任何记录"
 
 #: superset/templates/superset/import_dashboards.html:11
 msgid "Import dashboards"
-msgstr "仪表盘导入"
+msgstr "看板导入"
 
 #: superset/templates/superset/request_access.html:2
 msgid "No Access!"
@@ -4739,7 +4740,7 @@ msgstr "模拟登录用户"
 
 #: superset/views/core.py:302
 msgid "Import Dashboards"
-msgstr "导入仪表盘"
+msgstr "导入看板"
 
 #: superset/views/core.py:334
 msgid "CSV to Database configuration"
@@ -4825,19 +4826,19 @@ msgstr "图表"
 
 #: superset/views/core.py:532
 msgid "List Dashboards"
-msgstr "仪表盘列表"
+msgstr "看板列表"
 
 #: superset/views/core.py:533
 msgid "Show Dashboard"
-msgstr "显示仪表盘"
+msgstr "显示看板"
 
 #: superset/views/core.py:534
 msgid "Add Dashboard"
-msgstr "添加仪表盘"
+msgstr "添加看板"
 
 #: superset/views/core.py:535
 msgid "Edit Dashboard"
-msgstr "编辑仪表盘"
+msgstr "编辑看板"
 
 #: superset/views/core.py:547
 msgid ""
@@ -4898,7 +4899,7 @@ msgstr "导出"
 
 #: superset/views/core.py:603
 msgid "Export dashboards?"
-msgstr "导出仪表盘?"
+msgstr "导出看板?"
 
 #: superset/views/core.py:668
 msgid "Action"
@@ -5196,19 +5197,19 @@ msgstr "线宽"
 #~ msgstr "点击强制刷新"
 
 #~ msgid "Sorry, there was an error adding slices to this dashboard: %s"
-#~ msgstr "对不起，在此仪表板中添加切片时出错：%s"
+#~ msgstr "对不起，在此看板中添加切片时出错：%s"
 
 #~ msgid "Edit this dashboard's properties"
-#~ msgstr "编辑这个仪表板的属性"
+#~ msgstr "编辑这个看板的属性"
 
 #~ msgid "Add Slices"
 #~ msgstr "添加切片"
 
 #~ msgid "Add a new slice to the dashboard"
-#~ msgstr "向仪表板添加新的切片"
+#~ msgstr "向看板添加新的切片"
 
 #~ msgid "Add Slices to Dashboard"
-#~ msgstr "将切片添加到仪表板"
+#~ msgstr "将切片添加到看板"
 
 #~ msgid "Edit slice properties"
 #~ msgstr "编辑切片属性"
@@ -5226,7 +5227,7 @@ msgstr "线宽"
 #~ msgstr "[切片名称]"
 
 #~ msgid "Add slice to existing dashboard"
-#~ msgstr "将切片添加到现有仪表板"
+#~ msgstr "将切片添加到现有看板"
 
 #~ msgid "Check out this slice: %s"
 #~ msgstr "查看切片：%s"
@@ -5346,8 +5347,9 @@ msgstr "线宽"
 #~ msgid "Duration (in seconds) of the caching timeout for this slice."
 #~ msgstr "切片数据过期时间（秒）"
 
-#~ msgid "Slice"
-#~ msgstr "切片"
+#: superset/assets/src/profile/components/Favorites.jsx:51
+msgid "Slice"
+msgstr "切片"
 
 #~ msgid ""
 #~ "This json object describes the positioning of the widgets in the "
@@ -5362,3 +5364,610 @@ msgstr "线宽"
 
 #~ msgid "Cannot find User %(name)s, please ask your admin to create one."
 #~ msgstr "找不到用户 %(name)s，请您让管理员创建一个。"
+
+#: superset/assets/src/welcome/DashboardTable.jsx:50
+msgid "An error occurred while fethching Dashboards"
+msgstr "当查询看板时候出错"
+
+#: superset/views/core.py:445
+msgid "Published"
+msgstr "已发布"
+
+#: superset/assets/src/SqlLab/components/ResultSet.jsx:159
+msgid "Filter Results"
+msgstr "过滤结果"
+
+#: superset/assets/src/profile/components/Favorites.jsx:51
+msgid "Favorited"
+msgstr "已收藏"
+
+#: superset/templates/appbuilder/navbar_right.html:30
+msgid "New"
+msgstr "新建"
+
+#: superset/templates/appbuilder/general/widgets/search.html:24
+msgid "Filter List"
+msgstr "过滤条件"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:214
+msgid "View query"
+msgstr "查看查询"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:224
+msgid "View results"
+msgstr "查看结果"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:234
+msgid "View samples"
+msgstr "查看样例"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:245
+msgid "Run in SQL Lab"
+msgstr "在 SQL Lab 中执行"
+
+#: superset/assets/src/explore/components/DisplayQueryButton.jsx:140
+msgid "No data"
+msgstr "没有数据"
+
+#: superset/assets/src/explore/components/RowCountLabel.jsx:35
+msgid "rows"
+msgstr "行"
+
+#: superset/assets/src/explore/components/RowCountLabel.jsx:35
+msgid "Time range"
+msgstr "时间范围"
+
+#: superset/assets/src/explore/components/controls/DateFilterControl.jsx:456
+msgid "Ok"
+msgstr "确认"
+
+#: superset/assets/src/SqlLab/components/TemplateParamsEditor.jsx:128
+msgid "parameters"
+msgstr "参数"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:153
+msgid "Data"
+msgstr "数据"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:157
+msgid "Customize"
+msgstr "自定义"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:157
+msgid "Defaults"
+msgstr "默认"
+
+#: superset/assets/src/explore/components/ControlPanelsContainer.jsx:157
+msgid "Custom"
+msgstr "自定义"
+
+msgid "custom_start_end"
+msgstr "自定义起始时间"
+
+msgid "custom_range"
+msgstr "自定义区间"
+
+msgid "Last"
+msgstr "之前"
+
+msgid "Next"
+msgstr "之后"
+
+msgid "Last day"
+msgstr "昨天"
+
+msgid "Last week"
+msgstr "上周"
+
+msgid "Last month"
+msgstr "上个月"
+
+msgid "Last quarter"
+msgstr "上个季度"
+
+msgid "Last year"
+msgstr "去年"
+
+msgid "No filter"
+msgstr "无筛选"
+
+msgid "Superset supports smart date parsing. Strings like `last sunday` or `last october` can be used."
+msgstr "Superset支持智能的时间格式化。文本类似 `last sunday` 或者 `last october`这样的语句也可以被识别。"
+
+msgid "seconds"
+msgstr "秒"
+
+msgid "minutes"
+msgstr "分钟"
+
+msgid "hours"
+msgstr "小时"
+
+msgid "days"
+msgstr "天"
+
+msgid "weeks"
+msgstr "周"
+
+msgid "months"
+msgstr "月"
+
+msgid "years"
+msgstr "年"
+
+msgid "Start / end"
+msgstr "开始 / 结束"
+
+msgid "Relative to today"
+msgstr "相对于今天"
+
+msgid "Draft"
+msgstr "草稿"
+
+msgid "Share dashboard"
+msgstr "分享看板"
+
+msgid "Share chart"
+msgstr "分享图表"
+
+msgid "Insert components"
+msgstr "插入组件"
+
+msgid "Colors"
+msgstr "颜色"
+
+msgid "Save changes"
+msgstr "保存改变"
+
+msgid "Switch to view mode"
+msgstr "切换视图模式"
+
+msgid "Force refresh dashboard"
+msgstr "强制刷新看板"
+
+msgid "Force refresh"
+msgstr "强制刷新"
+
+msgid "Superset Dashboard"
+msgstr "Superset 看板"
+
+msgid "Check out this dashboard: "
+msgstr "查看此看板："
+
+msgid "Discard changes"
+msgstr "放弃更改"
+
+msgid "Set auto-refresh interval"
+msgstr "设置自动刷新间隔"
+
+msgid "Auto-refresh dashboard"
+msgstr "自动刷新看板"
+
+msgid "Edit dashboard metadata"
+msgstr "编辑看板元数据"
+
+msgid "Edit dashboard"
+msgstr "编辑看板"
+
+msgid "Edit chart metadata"
+msgstr "编辑图表元数据"
+
+msgid "Cached %s"
+msgstr "缓存 %s"
+
+msgid "Fetched %s"
+msgstr "在 %s 之前获取"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Choose File"
+msgstr "选择文件"
+
+msgid "List Query"
+msgstr "查询列表"
+
+msgid "List Annotation Layer"
+msgstr "注解层列表"
+
+msgid "List Annotation"
+msgstr "注解列表"
+
+msgid "Login count"
+msgstr "登陆计数"
+
+msgid "Failed login count"
+msgstr "失败登陆计数"
+
+msgid "Filter by user"
+msgstr "根据用户过滤"
+
+msgid "Filter by database"
+msgstr "根据数据库过滤"
+
+msgid "Query search string"
+msgstr "查询检索文本"
+
+msgid "Filter by status"
+msgstr "根据状态过滤"
+
+msgid "state"
+msgstr "状态"
+
+msgid "db"
+msgstr "数据库"
+
+msgid "progress"
+msgstr "进度"
+
+msgid "querylink"
+msgstr "查询链接"
+
+msgid "now"
+msgstr "现在"
+
+msgid "1 hour ago"
+msgstr "1 小时前"
+
+msgid "1 day ago"
+msgstr "1 天前"
+
+msgid "28 days ago"
+msgstr "28 天前"
+
+msgid "90 days ago"
+msgstr "90 天前"
+
+msgid "1 year ago"
+msgstr "1 年前"
+
+msgid "success"
+msgstr "成功"
+
+msgid "failed"
+msgstr "失败"
+
+msgid "running"
+msgstr "正在运行"
+
+msgid "offline"
+msgstr "下线"
+
+msgid "pending"
+msgstr "等待"
+
+msgid "Select All"
+msgstr "全选"
+
+msgid "Ignore null locations"
+msgstr "忽略空位置"
+
+msgid "Whether to ignore locations that are null"
+msgstr "是否忽略空位置"
+
+msgid "See table schema"
+msgstr "查看表结构"
+
+msgid "Assign a set of parameters as"
+msgstr "在下面指定一组参数，结构类似"
+
+msgid "below (example:"
+msgstr "（例如："
+
+msgid "), and they become available in your SQL (example:"
+msgstr "），并且他们可以在您的SQL中可用（例如："
+
+msgid ") by using"
+msgstr "），这种方法通过使用"
+
+msgid "syntax."
+msgstr "来实现。"
+
+#: superset/assets/src/dashboard/components/InsertComponentPane.jsx:102
+msgid "Your charts & filters"
+msgstr "您的图表和过滤条件"
+
+msgid "Your charts and filters"
+msgstr "您的图表和过滤条件"
+
+msgid "Your charts and filters"
+msgstr "您的图表和过滤条件"
+
+msgid "Filter your charts"
+msgstr "过滤您的图表"
+
+msgid "Tabs"
+msgstr "标签页(Tabs)"
+
+msgid "Row"
+msgstr "行"
+
+msgid "Header"
+msgstr "标题头(Header)"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Divider"
+msgstr "分割线"
+
+msgid "Sort by"
+msgstr "排序："
+
+msgid "Recent"
+msgstr "最近"
+
+msgid "Vis type"
+msgstr "视图类型"
+
+msgid "Determines whether or not this dashboard is visible in the list of all dashboards"
+msgstr "确定此看板是否在所有看板列表中可见"
+
+#: superset/assets/src/explore/controls.jsx:819
+msgid "all"
+msgstr "所有"
+
+msgid "week starting Sunday"
+msgstr "以周日开始一周"
+
+msgid "week ending Saturday"
+msgstr "以周六结束一周"
+
+msgid "6 hour"
+msgstr "6小时"
+
+msgid "5 seconds"
+msgstr "5秒"
+
+msgid "1 day"
+msgstr "1天"
+
+msgid "7 days"
+msgstr "7天"
+
+msgid "Emit Filter Events"
+msgstr "触发筛选器事件"
+
+msgid "Whether to apply filter when items are clicked"
+msgstr "单击选项时是否应用筛选器"
+
+msgid "Whether to include a client-side search box"
+msgstr "是否包含客户端搜索框"
+
+msgid "Adaptative formating"
+msgstr "自动匹配格式化"
+
+#: superset/assets/src/explore/components/controls/DatasourceControl.jsx:172
+msgid "Expand/collapse datasource configuration"
+msgstr "展开/折叠数据源配置"
+
+msgid "Click to edit the datasource"
+msgstr "点击编辑数据源"
+
+#: superset/assets/src/datasource/DatasourceModal.jsx:141
+msgid "Datasource Editor for "
+msgstr "数据源编辑器："
+
+#: superset/assets/src/datasource/DatasourceModal.jsx:162
+msgid "Use Legacy Datasource Editor"
+msgstr "使用原始数据源编辑器"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:577
+msgid "Settings"
+msgstr "设置"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:577
+msgid "This option is not yet available for views"
+msgstr "该选项针对视图并不可用"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:612
+msgid "Sync columns from source"
+msgstr "从数据源同步列"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:622
+msgid "Calculated Columns"
+msgstr "计算列"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:336
+msgid "Basic"
+msgstr "默认URL"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:366
+msgid "Default URL"
+msgstr "默认URL"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:366
+msgid "Default URL to redirect to when accessing from the datasource list page"
+msgstr "从数据源列表页访问时重定向到的默认URL"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:371
+msgid "Autocomplete filters"
+msgstr "自动筛选器"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:372
+msgid "Whether to populate autocomplete filters options"
+msgstr "是否填充自动筛选器选项"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:390
+msgid "Owners of the datasource"
+msgstr "数据源的所有者"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:428
+msgid "The JSON metric or post aggregation definition."
+msgstr "JSON指标或预聚合定义。"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:437
+msgid "The duration of time in seconds before the cache is invalidated"
+msgstr "缓存失效前的持续时间（秒）。"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:442
+msgid "Hours offset"
+msgstr "小时偏移量"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:126
+msgid "Data Type"
+msgstr "数据类型"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:127
+msgid "Is Dimension"
+msgstr "维度字段"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:128
+msgid "Is Temporal"
+msgstr "临时字段"
+
+#: superset/assets/src/datasource/DatasourceEditor.jsx:129
+msgid "Is Filterable"
+msgstr "可过滤"
+
+#: superset/assets/src/CRUD/CollectionTable.jsx:46
+msgid "No entries"
+msgstr "无结果"
+
+#: superset/assets/src/CRUD/CollectionTable.jsx:231
+msgid "Add Item"
+msgstr "添加项目"
+
+#: superset/assets/src/explore/components/controls/DatasourceControl.jsx:150
+msgid "Edit Datasource"
+msgstr "编辑数据源"
+
+#: superset/assets/src/explore/components/controls/DatasourceControl.jsx:165
+msgid "Change Datasource"
+msgstr "修改数据源"
+
+#: superset/assets/src/SqlLab/components/SqlEditor.jsx:460
+msgid "Keyboard shortcuts"
+msgstr "键盘热键"
+
+#: superset/assets/src/components/Hotkeys.jsx:54
+msgid "Key"
+msgstr "命令"
+
+#: superset/assets/src/explore/components/ExploreViewContainer.jsx:47
+msgid "RUN"
+msgstr "执行"
+
+#: superset/assets/src/explore/components/ExploreViewContainer.jsx:48
+msgid "SAVE"
+msgstr "保存"
+
+msgid "default"
+msgstr "默认"
+
+#: superset/assets/src/explore/controlPanels/Pie.js:50
+msgid "D3 format syntax: https://github.com/d3/d3-format"
+msgstr "D3格式语法：https://github.com/d3/d3-format"
+
+#: superset/assets/src/explore/controlPanels/Pie.js:51
+msgid "Only applies when the \"Label Type\" is not set to a percentage."
+msgstr "仅当“标签类型”未设置为百分比时才适用。"
+
+#: superset/static/assets/src/components/EditableTitle.jsx:194
+msgid "click to edit"
+msgstr "点击编辑"
+
+#: superset/static/assets/src/components/EditableTitle.jsx:195
+msgid "You don't have the rights to alter this title."
+msgstr "你无权更改此标题。"
+
+#: superset/views/core.py:1385
+msgid "Chart [{}] has been saved"
+msgstr "图表 [{}] 已经保存"
+
+#: superset/views/core.py:1394
+msgid "Chart [{}] has been overwritten"
+msgstr "图表 [{}] 已经被覆盖"
+
+#: superset/static/assets/src/datasource/DatasourceModal.jsx:63
+msgid "Confirm save"
+msgstr "保存确认"
+
+#: superset/static/assets/src/datasource/DatasourceModal.jsx:125
+msgid "Are you sure you want to save and apply changes?"
+msgstr "您确定想要保存修改吗？"
+
+#: superset/static/assets/src/datasource/DatasourceModal.jsx:118
+msgid "The data source configuration exposed here affects all the charts using this datasource. Be mindful that changing settings here may affect other charts in undesirable ways."
+msgstr "在这里对于数据源的配置会影响所有使用这个数据源的图表。需要注意改变这里的配置可能会以不可预期的方式影响其他图表。"
+
+msgid "Line Chart"
+msgstr "多线图"
+
+msgid "Bar Chart"
+msgstr "条形图"
+
+msgid "Area Chart"
+msgstr "面积图"
+
+msgid "Time Series - Bar Chart"
+msgstr "时间序列-面积图"
+
+msgid "deck.gl Polygon"
+msgstr ""
+
+msgid "Time-series Table"
+msgstr "时间序列-表格"
+
+msgid "deck.gl Scatterplot"
+msgstr "deck.gl 散点图"
+
+msgid "deck.gl 3D Hexagon"
+msgstr "deck.gl 3D Hexagon"
+
+msgid "Time-series Period Pivot"
+msgstr "时间序列-周期轴"
+
+msgid "deck.gl Arc"
+msgstr "deck.gl Arc"
+
+msgid "deck.gl Grid"
+msgstr "deck.gl Grid"
+
+msgid "Dual Line Chart"
+msgstr "双线图"
+
+msgid "Multiple Line Charts"
+msgstr "复合折线图"
+
+msgid "Sunburst Chart"
+msgstr "旭日/太阳图"
+
+msgid "Sankey Diagram"
+msgstr "桑基图"
+
+msgid "MapBox"
+msgstr "MapBox"
+
+msgid "Nightingale Rose Chart"
+msgstr "南丁格尔玫瑰图"
+
+msgid "deck.gl Geojson"
+msgstr "deck.gl Geojson"
+
+msgid "Horizon Chart"
+msgstr "地平线图"
+
+msgid "deck.gl Multiple Layers"
+msgstr "deck.gl Multiple Layers"
+
+msgid "Time-series Percent Change"
+msgstr "时间序列-百分比变化"
+
+msgid "Partition Chart"
+msgstr "分区图"
+
+msgid "Event Flow"
+msgstr "事件流"
+
+msgid "deck.gl Path"
+msgstr "deck.gl Path"
+
+msgid "Force-directed Graph"
+msgstr "力导向图"
+
+msgid "Paired t-test Table"
+msgstr "配对T检测表"
+
+msgid "IFrame"
+msgstr "IFrame"
