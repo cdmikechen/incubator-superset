@@ -73,6 +73,9 @@ class DruidColumnInlineView(CompactCRUDMixin, SupersetModelView):
         "type": _("Type"),
         "datasource": _("Datasource"),
         "groupby": _("Groupable"),
+        "verbose_name": _("Verbose Name"),
+        "description": _("Description"),
+        "dimension_spec_json": _("Dimension Spec Json"),
         "filterable": _("Filterable"),
     }
     description_columns = {
@@ -93,7 +96,7 @@ class DruidColumnInlineView(CompactCRUDMixin, SupersetModelView):
 
     add_form_extra_fields = {
         "datasource": QuerySelectField(
-            "Datasource",
+            _("Datasource"),
             query_factory=lambda: db.session().query(models.DruidDatasource),
             allow_blank=True,
             widget=Select2Widget(extra_classes="readonly"),

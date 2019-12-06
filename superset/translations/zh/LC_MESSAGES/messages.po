@@ -4907,7 +4907,7 @@ msgstr "操作"
 
 #: superset/views/core.py:669
 msgid "dttm"
-msgstr "dttm"
+msgstr "timestamp格式日期"
 
 #: superset/views/core.py:677
 msgid "Action Log"
@@ -5419,6 +5419,9 @@ msgstr "时间范围"
 
 #: superset/assets/src/explore/components/controls/DateFilterControl.jsx:456
 msgid "Ok"
+msgstr "确认"
+
+msgid "OK"
 msgstr "确认"
 
 #: superset/assets/src/SqlLab/components/TemplateParamsEditor.jsx:128
@@ -6268,3 +6271,168 @@ msgstr "关闭"
 #: superset/assets/src/datasource/DatasourceModal.jsx:81
 msgid "The datasource has been saved"
 msgstr "数据源信息已经被保存"
+
+msgid "Dimension Spec Json"
+msgstr "维度规范json"
+
+#: superset/assets/src/components/TableSelector.jsx:307
+msgid "Select table or type table name"
+msgstr "选择表或者类型表的名称"
+
+#: superset/assets/src/SqlLab/components/SouthPane.jsx:107
+msgid "Preview: `%s`"
+msgstr "预览: `%s`"
+
+#: superset/assets/src/components/TableSelector.jsx:330
+msgid "Force refresh table list"
+msgstr "强制刷新表列表"
+
+#: superset/assets/src/components/TableSelector.jsx:287
+msgid "Force refresh schema list"
+msgstr "强制刷新结构列表"
+
+#: superset/assets/src/SqlLab/components/TableElement.jsx:173
+msgid "Copy SELECT statement to the clipboard"
+msgstr "复制 SELECT 语句到剪切板"
+
+#: superset/assets/src/SqlLab/components/SqlEditor.jsx:180
+msgid "Run query"
+msgstr "执行查询"
+
+#: superset/assets/src/SqlLab/components/SqlEditor.jsx:192
+msgid "New tab"
+msgstr "新Tab页"
+
+#: superset/assets/src/SqlLab/components/SqlEditor.jsx:204
+msgid "Stop query"
+msgstr "停止查询"
+
+#: superset/assets/src/SqlLab/components/ResultSet.jsx:146
+msgid "Clipboard"
+msgstr "剪切板"
+
+#: superset/views/log/__init__.py:22
+msgid "Logs"
+msgstr "日志"
+
+#: superset/static/assets/src/explore/controlPanels/sections.jsx:94
+msgid "Moving Average"
+msgstr "移动均线"
+
+#: superset/static/assets/src/explore/controlPanels/sections.jsx:94
+msgid "Time Comparison"
+msgstr "时间比对"
+
+#: superset/static/assets/src/explore/controlPanels/sections.jsx:94
+msgid "Python Functions"
+msgstr "Python方法"
+
+#: superset/assets/src/explore/controls.jsx:934
+msgid "Rule"
+msgstr "规则"
+
+#: superset/assets/src/explore/controls.jsx:943
+msgid "Method"
+msgstr "方法"
+
+#: superset/assets/src/explore/controls.jsx:1726
+msgid "Calculation type"
+msgstr "计算类型"
+
+#: superset/assets/src/explore/controls.jsx:1734
+msgid ""
+"How to display time shifts: as individual lines; as the "
+"absolute difference between the main time series and each time shift; "
+"as the percentage change; or as the ratio between series and time shifts."
+msgstr "如何显示时间偏移：作为单独的行显示；作为主时间序列与每次时间偏移之间的绝对差显示；作为百分比变化显示；或作为序列与时间偏移之间的比率显示。"
+
+#: superset/assets/src/explore/controls.jsx:1729
+msgid "Actual Values"
+msgstr "实际值"
+
+#: superset/assets/src/explore/controls.jsx:1730
+msgid "Absolute difference"
+msgstr "绝对差"
+
+#: superset/assets/src/explore/controls.jsx:1731
+msgid "Percentage change"
+msgstr "百分比变动"
+
+#: superset/assets/src/explore/components/controls/AnnotationLayer.jsx:571
+msgid "Automatic Color"
+msgstr "自动上色"
+
+#: superset/assets/src/explore/components/controls/AnnotationLayer.jsx:365
+msgid "Bad formula."
+msgstr "错误公式。"
+
+#: superset/assets/src/explore/components/controls/AnnotationLayer.jsx:332
+msgid "Formula"
+msgstr "公式 "
+
+#: superset/assets/src/explore/components/controls/AnnotationLayer.jsx:321
+msgid "Annotation Layer"
+msgstr "注解层"
+
+#: superset/assets/src/explore/components/controls/AnnotationLayer.jsx:333
+msgid ""
+"Expects a formula with depending time parameter 'x' "
+"in milliseconds since epoch. mathjs is used to evaluate the formulas. "
+"Example: '2x+5'"
+msgstr "需要一个从Epoch（1970年1月1日00:00:00 UTC）时间点开始的时间参数“x”，并以此来计算的公式（以毫秒为单位）。我们使用“mathjs”来进行公式的计算。例如：'2x+5'"
+
+#: superset/assets/src/explore/controls.jsx:1712
+msgid "1 week"
+msgstr "1周"
+
+#: superset/assets/src/explore/controls.jsx:1713
+msgid "28 days"
+msgstr "28天"
+
+#: superset/assets/src/explore/controls.jsx:1714
+msgid "30 days"
+msgstr "30天"
+
+#: superset/assets/src/explore/controls.jsx:1715
+msgid "52 weeks"
+msgstr "52周"
+
+#: superset/assets/src/explore/controls.jsx:1716
+msgid "1 year"
+msgstr "1年"
+
+#: superset/assets/src/explore/controls.jsx:799
+msgid "The way the ticks are laid out on the X-axis"
+msgstr "X轴记号的排列显示方式"
+
+#: superset/assets/src/explore/controls.jsx:1638
+msgid "Whether to display the min and max values of the X-axis"
+msgstr "是否显示X轴的最小值和最大值"
+
+#: superset/assets/src/explore/controls.jsx:1646
+msgid "Whether to display the min and max values of the Y-axis"
+msgstr "是否显示Y轴的最小值和最大值"
+
+#: superset/assets/src/explore/controls.jsx:1663
+msgid "Use a log scale for the Y-axis"
+msgstr "使用Y轴的对数刻度"
+
+#: superset/assets/src/explore/controls.jsx:1671
+msgid "Use a log scale for the X-axis"
+msgstr "使用X轴的对数刻度"
+
+#: superset/assets/src/explore/controls.jsx:1671
+msgid ""
+"Bounds for the Y-axis. When left empty, the bounds are "
+"dynamically defined based on the min/max of the data. Note that "
+"this feature will only expand the axis range. It won't "
+"narrow the data's extent."
+msgstr "y轴的边界。如果保留为空，则根据数据的最小/最大值动态定义边界。注意，这个特性只会扩展轴范围。它不会缩小数据的范围。"
+
+#: superset/assets/src/explore/controls.jsx:311
+msgid "Legend Format"
+msgstr "图例格式化"
+
+#: superset/assets/src/explore/controls.jsx:312
+msgid "Choose the format for legend values"
+msgstr "选择图例值的格式化方式"

@@ -3227,7 +3227,7 @@
         "操作"
       ],
       "dttm": [
-        "dttm"
+        "timestamp格式日期"
       ],
       "Action Log": [
         "操作日志"
@@ -3434,6 +3434,9 @@
         "时间范围"
       ],
       "Ok": [
+        "确认"
+      ],
+      "OK": [
         "确认"
       ],
       "parameters": [
@@ -4146,6 +4149,126 @@
       ],
       "Close": [
         "关闭"
+      ],
+      "The datasource has been saved": [
+        "数据源信息已经被保存"
+      ],
+      "Dimension Spec Json": [
+        "维度规范json"
+      ],
+      "Select table or type table name": [
+        "选择表或者类型表的名称"
+      ],
+      "Preview: `%s`": [
+        "预览: `%s`"
+      ],
+      "Force refresh table list": [
+        "强制刷新表列表"
+      ],
+      "Force refresh schema list": [
+        "强制刷新结构列表"
+      ],
+      "Copy SELECT statement to the clipboard": [
+        "复制 SELECT 语句到剪切板"
+      ],
+      "Run query": [
+        "执行查询"
+      ],
+      "New tab": [
+        "新Tab页"
+      ],
+      "Stop query": [
+        "停止查询"
+      ],
+      "Clipboard": [
+        "剪切板"
+      ],
+      "Logs": [
+        "日志"
+      ],
+      "Moving Average": [
+        "移动均线"
+      ],
+      "Time Comparison": [
+        "时间比对"
+      ],
+      "Python Functions": [
+        "Python方法"
+      ],
+      "Rule": [
+        "规则"
+      ],
+      "Method": [
+        "方法"
+      ],
+      "Calculation type": [
+        "计算类型"
+      ],
+      "How to display time shifts: as individual lines; as the absolute difference between the main time series and each time shift; as the percentage change; or as the ratio between series and time shifts.": [
+        "如何显示时间偏移：作为单独的行显示；作为主时间序列与每次时间偏移之间的绝对差显示；作为百分比变化显示；或作为序列与时间偏移之间的比率显示。"
+      ],
+      "Actual Values": [
+        "实际值"
+      ],
+      "Absolute difference": [
+        "绝对差"
+      ],
+      "Percentage change": [
+        "百分比变动"
+      ],
+      "Automatic Color": [
+        "自动上色"
+      ],
+      "Bad formula.": [
+        "错误公式。"
+      ],
+      "Formula": [
+        "公式 "
+      ],
+      "Annotation Layer": [
+        "注解层"
+      ],
+      "Expects a formula with depending time parameter 'x' in milliseconds since epoch. mathjs is used to evaluate the formulas. Example: '2x+5'": [
+        "需要一个从Epoch（1970年1月1日00:00:00 UTC）时间点开始的时间参数“x”，并以此来计算的公式（以毫秒为单位）。我们使用“mathjs”来进行公式的计算。例如：'2x+5'"
+      ],
+      "1 week": [
+        "1周"
+      ],
+      "28 days": [
+        "28天"
+      ],
+      "30 days": [
+        "30天"
+      ],
+      "52 weeks": [
+        "52周"
+      ],
+      "1 year": [
+        "1年"
+      ],
+      "The way the ticks are laid out on the X-axis": [
+        "X轴记号的排列显示方式"
+      ],
+      "Whether to display the min and max values of the X-axis": [
+        "是否显示X轴的最小值和最大值"
+      ],
+      "Whether to display the min and max values of the Y-axis": [
+        "是否显示Y轴的最小值和最大值"
+      ],
+      "Use a log scale for the Y-axis": [
+        "使用Y轴的对数刻度"
+      ],
+      "Use a log scale for the X-axis": [
+        "使用X轴的对数刻度"
+      ],
+      "Bounds for the Y-axis. When left empty, the bounds are dynamically defined based on the min/max of the data. Note that this feature will only expand the axis range. It won't narrow the data's extent.": [
+        "y轴的边界。如果保留为空，则根据数据的最小/最大值动态定义边界。注意，这个特性只会扩展轴范围。它不会缩小数据的范围。"
+      ],
+      "Legend Format": [
+        "图例格式化"
+      ],
+      "Choose the format for legend values": [
+        "选择图例值的格式化方式"
       ]
     }
   }
