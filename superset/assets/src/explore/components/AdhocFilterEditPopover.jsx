@@ -19,6 +19,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, Popover, Tab, Tabs } from 'react-bootstrap';
+import { t } from '@superset-ui/translation';
 
 import columnType from '../propTypes/columnType';
 import adhocMetricType from '../propTypes/adhocMetricType';
@@ -131,7 +132,7 @@ export default class AdhocFilterEditPopover extends React.Component {
           <Tab
             className="adhoc-filter-edit-tab"
             eventKey={EXPRESSION_TYPES.SIMPLE}
-            title="Simple"
+            title={t("Simple")}
           >
             <AdhocFilterEditPopoverSimpleTabContent
               adhocFilter={this.state.adhocFilter}
@@ -144,7 +145,7 @@ export default class AdhocFilterEditPopover extends React.Component {
           <Tab
             className="adhoc-filter-edit-tab"
             eventKey={EXPRESSION_TYPES.SQL}
-            title="Custom SQL"
+            title={t("Custom SQL")}
           >
             {
               (!this.props.datasource || this.props.datasource.type !== 'druid') ?
@@ -155,7 +156,7 @@ export default class AdhocFilterEditPopover extends React.Component {
                   height={this.state.height}
                 /> :
                 <div className="custom-sql-disabled-message">
-                  Custom SQL Filters are not available on druid datasources
+                  {t('Custom SQL Filters are not available on druid datasources')}
                 </div>
             }
           </Tab>
@@ -168,9 +169,9 @@ export default class AdhocFilterEditPopover extends React.Component {
             className="m-r-5"
             onClick={this.onSave}
           >
-            Save
+            {t('Save')}
           </Button>
-          <Button bsSize="small" onClick={this.props.onClose}>Close</Button>
+          <Button bsSize="small" onClick={this.props.onClose}>{t('Close')}</Button>
           <i onMouseDown={this.onDragDown} className="glyphicon glyphicon-resize-full edit-popover-resize" />
         </div>
       </Popover>

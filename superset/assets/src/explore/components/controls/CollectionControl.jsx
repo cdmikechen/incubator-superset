@@ -18,6 +18,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
+import { t } from '@superset-ui/translation';
 import { ListGroup, ListGroupItem } from 'react-bootstrap';
 import shortid from 'shortid';
 import {
@@ -28,6 +29,7 @@ import InfoTooltipWithTrigger from '../../../components/InfoTooltipWithTrigger';
 import ControlHeader from '../ControlHeader';
 import controlMap from './';
 import './CollectionControl.css';
+
 
 const propTypes = {
   name: PropTypes.string.isRequired,
@@ -50,11 +52,11 @@ const defaultProps = {
   label: null,
   description: null,
   onChange: () => {},
-  placeholder: 'Empty collection',
+  placeholder: t('Empty collection'),
   itemGenerator: () => ({ key: shortid.generate() }),
   keyAccessor: o => o.key,
   value: [],
-  addTooltip: 'Add an item',
+  addTooltip: t('Add an item'),
 };
 const SortableListGroupItem = SortableElement(ListGroupItem);
 const SortableListGroup = SortableContainer(ListGroup);

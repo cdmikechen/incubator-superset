@@ -1440,7 +1440,7 @@ export const controls = {
     label: t('Instant Filtering'),
     renderTrigger: true,
     default: true,
-    description: (
+    description: t(
       'Whether to apply filters as they change, or wait for ' +
       'users to hit an [Apply] button'
     ),
@@ -2323,7 +2323,7 @@ export const controls = {
 
   filter_configs: {
     type: 'CollectionControl',
-    label: 'Filters',
+    label: t('Filters'),
     description: t('Filter configuration for the filter box'),
     validators: [],
     controlName: 'FilterBoxItemControl',

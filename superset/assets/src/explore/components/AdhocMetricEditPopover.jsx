@@ -235,7 +235,7 @@ export default class AdhocMetricEditPopover extends React.Component {
           onSelect={this.refreshAceEditor}
           animation={false}
         >
-          <Tab className="adhoc-metric-edit-tab" eventKey={EXPRESSION_TYPES.SIMPLE} title="Simple">
+          <Tab className="adhoc-metric-edit-tab" eventKey={EXPRESSION_TYPES.SIMPLE} title={t("Simple")}>
             <FormGroup>
               <ControlLabel><strong>column</strong></ControlLabel>
               <OnPasteSelect {...this.selectProps} {...columnSelectProps} />
@@ -245,7 +245,7 @@ export default class AdhocMetricEditPopover extends React.Component {
               <OnPasteSelect autoFocus {...this.selectProps} {...aggregateSelectProps} />
             </FormGroup>
           </Tab>
-          <Tab className="adhoc-metric-edit-tab" eventKey={EXPRESSION_TYPES.SQL} title="Custom SQL">
+          <Tab className="adhoc-metric-edit-tab" eventKey={EXPRESSION_TYPES.SQL} title={t("Custom SQL")}>
             {
               this.props.datasourceType !== 'druid' ?
                 <FormGroup>
@@ -265,7 +265,7 @@ export default class AdhocMetricEditPopover extends React.Component {
                   />
                 </FormGroup> :
                 <div className="custom-sql-disabled-message">
-                  Custom SQL Metrics are not available on druid datasources
+                  {t('Custom SQL Filters are not available on druid datasources')}
                 </div>
             }
           </Tab>
@@ -278,9 +278,9 @@ export default class AdhocMetricEditPopover extends React.Component {
             className="m-r-5"
             onClick={this.onSave}
           >
-            Save
+            {t('Save')}
           </Button>
-          <Button bsSize="small" onClick={this.props.onClose}>Close</Button>
+          <Button bsSize="small" onClick={this.props.onClose}>{t('Close')}</Button>
           <i onMouseDown={this.onDragDown} className="glyphicon glyphicon-resize-full edit-popover-resize" />
         </div>
       </Popover>

@@ -968,7 +968,7 @@
         "导出 CSV"
       ],
       "Explore chart": [
-        "探索图表"
+        "打开图表"
       ],
       "Remove chart from dashboard": [
         "从看板中删除图表"
@@ -1244,7 +1244,7 @@
         "起点"
       ],
       "Defines the origin where time buckets start, accepts natural dates as in `now`, `sunday` or `1970-01-01`": [
-        "定义时间桶的起点，接受 `now`，`sunday` 或 `1970-01-01` 的自然日期"
+        "定义时间桶的起点，接受 `now`，`sunday` 或 `1970-01-01` 等的自然日期"
       ],
       "Bottom Margin": [
         "底部边距"
@@ -2795,7 +2795,7 @@
         "数据源的时差(单位：小时)"
       ],
       "Time expression to use as a predicate when retrieving distinct values to populate the filter component. Only applies when `Enable Filter Select` is on. If you enter `7 days ago`, the distinct list of values in the filter will be populated based on the distinct value over the past week": [
-        "当检索不同的值以填充过滤器组件时，时间表达式用作条件。只适用于`启用过滤器选择`。如果您输入`7天前`，将根据过去一周的不同值来填充ilter中不同的值列表"
+        "当填充过滤器组件时，时间表达式可以作为筛选条件。它只适用于 `启用过滤器选择` 开启的时候。如果您输入 `7天前` ，过滤器会根据过去一周的不同值来填充列表"
       ],
       "Whether to populate the filter's dropdown in the explore view's filter section with a list of distinct values fetched from the backend on the fly": [
         "是否在浏览视图的过滤器部分中填充过滤器的下拉列表，并提供从后端获取的不同值的列表"
@@ -3359,7 +3359,7 @@
         "此集群的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为全局超时。"
       ],
       "Duration (in seconds) of the caching timeout for this datasource. A timeout of 0 indicates that the cache never expires. Note this defaults to the cluster timeout if undefined.": [
-        "此数据源的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。注意，如果未定义，这默认为集群超时。"
+        "此数据源的缓存超时持续时间(以秒为单位)。超时为0表示缓存永远不会过期。如果未定义，则会使用默认值。"
       ],
       "Layer Configuration": [
         "配置Layer"
@@ -3515,6 +3515,9 @@
         "草稿"
       ],
       "Share dashboard": [
+        "分享看板"
+      ],
+      "Share Dashboard": [
         "分享看板"
       ],
       "Share chart": [
@@ -3785,7 +3788,7 @@
         "数据源的所有者"
       ],
       "The JSON metric or post aggregation definition.": [
-        "JSON指标或预聚合定义。"
+        "JSON指标或后聚合定义。"
       ],
       "The duration of time in seconds before the cache is invalidated": [
         "缓存失效前的持续时间（秒）。"
@@ -3830,6 +3833,9 @@
         "保存"
       ],
       "default": [
+        "默认"
+      ],
+      "Default": [
         "默认"
       ],
       "D3 format syntax: https://github.com/d3/d3-format": [
@@ -3933,6 +3939,213 @@
       ],
       "IFrame": [
         "IFrame"
+      ],
+      "Anhui": [
+        "安徽"
+      ],
+      "Beijing": [
+        "北京"
+      ],
+      "Chongqing": [
+        "重庆"
+      ],
+      "Fujian": [
+        "福建"
+      ],
+      "Gansu": [
+        "甘肃"
+      ],
+      "Guangdong": [
+        "广东"
+      ],
+      "Guangxi": [
+        "广西"
+      ],
+      "Guizhou": [
+        "贵州"
+      ],
+      "Hainan": [
+        "海南"
+      ],
+      "Hebei": [
+        "河北"
+      ],
+      "Heilongjiang": [
+        "黑龙江"
+      ],
+      "Henan": [
+        "河南"
+      ],
+      "Hubei": [
+        "湖北"
+      ],
+      "Hunan": [
+        "湖南"
+      ],
+      "Jiangsu": [
+        "江苏"
+      ],
+      "Jiangxi": [
+        "江西"
+      ],
+      "Jilin": [
+        "吉林"
+      ],
+      "Liaoning": [
+        "辽宁"
+      ],
+      "Nei Mongol": [
+        "内蒙古"
+      ],
+      "Ningxia Hui": [
+        "宁夏"
+      ],
+      "Qinghai": [
+        "青海"
+      ],
+      "Shaanxi": [
+        "陕西"
+      ],
+      "Shandong": [
+        "山东"
+      ],
+      "Shanghai": [
+        "上海"
+      ],
+      "Shanxi": [
+        "山西"
+      ],
+      "Sichuan": [
+        "四川"
+      ],
+      "Tianjin": [
+        "天津"
+      ],
+      "Xinjiang Uygur": [
+        "新疆"
+      ],
+      "Xizang": [
+        "西藏"
+      ],
+      "Yunnan": [
+        "云南"
+      ],
+      "Zhejiang": [
+        "浙江"
+      ],
+      "Taiwan": [
+        "台湾"
+      ],
+      "Hong Kong": [
+        "香港"
+      ],
+      "Macao": [
+        "澳门"
+      ],
+      "Visualization": [
+        "视图名称 "
+      ],
+      "Any color palette selected here will override the colors applied to this dashboard's individual charts": [
+        "此处选择的任何调色板都将覆盖应用于此看板的各个图表的颜色"
+      ],
+      "Select": [
+        "选择"
+      ],
+      "Color Settings": [
+        "颜色选项"
+      ],
+      "Select Dashboard": [
+        "选择看板"
+      ],
+      "Filters Configuration": [
+        "筛选条件配置"
+      ],
+      "Limit Selector Values": [
+        "限制选择器的值"
+      ],
+      "These filters apply to the values available in the dropdowns": [
+        "这些过滤器应用于下拉列表中的可用值"
+      ],
+      "Filter configuration for the filter box": [
+        "这些过滤器应用于下拉列表中的可用值"
+      ],
+      "Empty collection": [
+        "无选择"
+      ],
+      "Add an item": [
+        "添加元素"
+      ],
+      "Refreshed metadata from cluster [{}]": [
+        "已经从集群 [{}] 刷新元数据"
+      ],
+      "Metadata Last Refreshed": [
+        "元数据最近更新时间"
+      ],
+      "Refer to the [SqlAlchemy docs](https://docs.sqlalchemy.org/en/rel_1_2/core/engines.html#database-urls) for more information on how to structure your URI.": [
+        "想要获取更多的关于如何构建URL连接串的信息，可以点击此链接 [SqlAlchemy 文档](https://docs.sqlalchemy.org/en/rel_1_2/core/engines.html#database-urls) 。"
+      ],
+      "JSON string containing extra configuration elements.<br/>1. The ``engine_params`` object gets unpacked into the [sqlalchemy.create_engine](https://docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine) call, while the ``metadata_params`` gets unpacked into the [sqlalchemy.MetaData](https://docs.sqlalchemy.org/en/rel_1_0/core/metadata.html#sqlalchemy.schema.MetaData) call.<br/>2. The ``metadata_cache_timeout`` is a cache timeout setting in seconds for metadata fetch of this database. Specify it as **\"metadata_cache_timeout\": {\"schema_cache_timeout\": 600, \"table_cache_timeout\": 600}**. If unset, cache will not be enabled for the functionality. A timeout of 0 indicates that the cache never expires.<br/>3. The ``schemas_allowed_for_csv_upload`` is a comma separated list of schemas that CSVs are allowed to upload to. Specify it as **\"schemas_allowed_for_csv_upload\": [\"public\", \"csv_upload\"]**. If database flavor does not support schema or any schema is allowed to be accessed, just leave the list empty4. the ``version`` field is a string specifying the this db's version. This should be used with Presto DBs so that the syntax is correct": [
+        "包含额外配置元素的JSON字符串。<br/>1. ``engine_params`` 对象在调用 [sqlalchemy.create_engine](https://docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine) 时被引用, 而 ``metadata_params`` 在调用 [sqlalchemy.MetaData](https://docs.sqlalchemy.org/en/rel_1_0/core/metadata.html#sqlalchemy.schema.MetaData) 时被引用。<br/>2. ``metadata_cache_timeout`` 是获取该数据库元数据的缓存超时设置（秒）。可以这样进行设置： **\"metadata_cache_timeout\": {\"schema_cache_timeout\": 600, \"table_cache_timeout\": 600}**。如果未设置，则不会为该功能启用缓存。如果超时时间设置为0，则表示缓存永不过期。<br/>3. ``schemas_allowed_for_csv_upload`` 是CSV文件允许上传的schema，该结构以逗号进行分割。 可以这样进行设置： **\"schemas_allowed_for_csv_upload\": [\"public\", \"csv_upload\"]**. 如果数据库风格不支持schema或任何schema都被允许，请将列表留空。<br/>4. ``version`` 字段是指定此数据库版本的字符串。 这应该与Presto DBs一起使用，以便语法正确。"
+      ],
+      "Fetch Values From": [
+        "时间默认值"
+      ],
+      "Filter Configuration": [
+        "过滤器配置"
+      ],
+      "Sort Metric": [
+        "排序指标"
+      ],
+      "Metric to sort the results by": [
+        "按照指标的结果进行排序"
+      ],
+      "(optional) default value for the filter, when using the multiple option, you can use a semicolon-delimited list of options.": [
+        "过滤器的默认值，当使用多选框的时候，您可以使用带分号的分隔列表。"
+      ],
+      "Sort Ascending": [
+        "升序排序"
+      ],
+      "Check for sorting ascending": [
+        "按照升序进行排序"
+      ],
+      "Allow Multiple Selections": [
+        "允许多选下拉框"
+      ],
+      "Multiple selections allowed, otherwise filter is limited to a single value": [
+        "允许多选下拉框，不勾选的话过滤器就是单选下拉框"
+      ],
+      "Required": [
+        "必选"
+      ],
+      "User must select a value for this filter": [
+        "用户必须给过滤器选择一个值"
+      ],
+      "Chart [{}] was added to dashboard [{}]": [
+        "图表 [{}] 已经被添加到看板 [{}]"
+      ],
+      "Not filtered": [
+        "无过滤"
+      ],
+      "Whether to apply filters as they change, or wait for users to hit an [Apply] button": [
+        "是在更改时应用下拉选框的选项，还是等待用户单击 [应用] 按钮时候触发"
+      ],
+      "Simple": [
+        "简单配置"
+      ],
+      "Custom SQL": [
+        "自定义SQL"
+      ],
+      "Custom SQL Filters are not available on druid datasources": [
+        "自定义SQL过滤器暂时不适用于druid的数据源"
+      ],
+      "Show Trend Line": [
+        "显示趋势线"
+      ],
+      "Whether to display the trend line": [
+        "是否显示趋势线"
+      ],
+      "Close": [
+        "关闭"
       ]
     }
   }
