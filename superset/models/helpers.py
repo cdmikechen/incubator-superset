@@ -344,7 +344,13 @@ class AuditMixinNullable(AuditMixin):
 
     @property
     def changed_on_humanized(self):
-        return humanize.naturaltime(datetime.now() - self.changed_on)
+        try:
+            from superset import conf
+            humanize_locale = conf.get("HUMANIZE_LOCAL", None)
+            if humanize_locale is not None:
+                humanize.i18n.activate(humanize_locale)
+        finally:
+            return humanize.naturaltime(datetime.now() - self.changed_on)
 
     @renders("changed_on")
     def modified(self):

@@ -6436,3 +6436,10 @@ msgstr "图例格式化"
 #: superset/assets/src/explore/controls.jsx:312
 msgid "Choose the format for legend values"
 msgstr "选择图例值的格式化方式"
+
+#: superset/static/assets/src/addSlice/AddSliceContainer.jsx:98
+msgid ""
+"If the datasource you are looking for is not "
+"available in the list, "
+"follow the instructions on the how to add it on the "
+msgstr "如果您想要找的数据源不在列表里面，您可以查看如下的介绍来了解如何去添加："
