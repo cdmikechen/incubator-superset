@@ -22,5 +22,5 @@ import App from './App';
 
 ReactDOM.render(
   <App />,
-  document.getElementById('js-add-slice-container'),
+  document.getElementById('app'),
 );

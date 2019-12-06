@@ -36,6 +36,7 @@ from flask import (
     render_template,
     request,
     Response,
+    get_flashed_messages,
     url_for,
 )
 from flask_appbuilder import expose
@@ -43,7 +44,7 @@ from flask_appbuilder.actions import action
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.security.decorators import has_access, has_access_api
 from flask_appbuilder.security.sqla import models as ab_models
-from flask_babel import gettext as __, lazy_gettext as _
+from flask_babel import get_locale, gettext as __, lazy_gettext as _
 from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -87,6 +88,8 @@ from superset.utils.decorators import etag_cache, stats_timing
 from .base import (
     api,
     BaseSupersetView,
+    FRONTEND_CONF_KEYS,
+    get_language_pack,
     check_ownership,
     CsvResponse,
     data_payload_response,
@@ -413,10 +416,22 @@ class SliceModelView(SupersetModelView, DeleteMixin):
         datasources = [
             {"value": str(d.id) + "__" + d.type, "label": repr(d)} for d in datasources
         ]
+
+        messages = get_flashed_messages(with_categories=True)
+        locale = str(get_locale())
+        common_bootstrap = {
+            "flash_messages": messages,
+            "conf": {k: conf.get(k) for k in FRONTEND_CONF_KEYS},
+            "locale": locale,
+            "language_pack": get_language_pack(locale),
+            "feature_flags": get_feature_flags(),
+        }
+
         return self.render_template(
             "superset/add_slice.html",
             bootstrap_data=json.dumps(
-                {"datasources": sorted(datasources, key=lambda d: d["label"])}
+                {"datasources": sorted(datasources, key=lambda d: d["label"]),
+                 "common": common_bootstrap}
             ),
         )
 
