@@ -34,6 +34,9 @@ from sqlalchemy.orm.exc import MultipleResultsFound
 
 from superset.utils.core import QueryStatus
 
+from flask_babel import get_locale
+from superset import conf
+
 
 def json_to_dict(json_str):
     if json_str:
@@ -345,10 +348,13 @@ class AuditMixinNullable(AuditMixin):
     @property
     def changed_on_humanized(self):
         try:
-            from superset import conf
-            humanize_locale = conf.get("HUMANIZE_LOCAL", None)
+            # 定义返回的 humanize_locale
+            locale = str(get_locale())
+            humanize_locale = conf.get("LANGUAGES").get(locale).get("humanize_locale")
             if humanize_locale is not None:
                 humanize.i18n.activate(humanize_locale)
+        except Exception as ex:
+            humanize.i18n.deactivate()
         finally:
             return humanize.naturaltime(datetime.now() - self.changed_on)
 

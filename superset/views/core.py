@@ -88,8 +88,7 @@ from superset.utils.decorators import etag_cache, stats_timing
 from .base import (
     api,
     BaseSupersetView,
-    FRONTEND_CONF_KEYS,
-    get_language_pack,
+    common_bootstrap_payload,
     check_ownership,
     CsvResponse,
     data_payload_response,
@@ -417,21 +416,11 @@ class SliceModelView(SupersetModelView, DeleteMixin):
             {"value": str(d.id) + "__" + d.type, "label": repr(d)} for d in datasources
         ]
 
-        messages = get_flashed_messages(with_categories=True)
-        locale = str(get_locale())
-        common_bootstrap = {
-            "flash_messages": messages,
-            "conf": {k: conf.get(k) for k in FRONTEND_CONF_KEYS},
-            "locale": locale,
-            "language_pack": get_language_pack(locale),
-            "feature_flags": get_feature_flags(),
-        }
-
         return self.render_template(
             "superset/add_slice.html",
             bootstrap_data=json.dumps(
                 {"datasources": sorted(datasources, key=lambda d: d["label"]),
-                 "common": common_bootstrap}
+                 "common": common_bootstrap_payload()}
             ),
         )
 

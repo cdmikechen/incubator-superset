@@ -206,16 +206,16 @@ BABEL_DEFAULT_LOCALE = "zh"
 BABEL_DEFAULT_FOLDER = "superset/translations"
 # The allowed translation for you app
 LANGUAGES = {
-    "en": {"flag": "us", "name": "English"},
-    "it": {"flag": "it", "name": "Italian"},
-    "fr": {"flag": "fr", "name": "French"},
-    "zh": {"flag": "cn", "name": "Chinese"},
-    "ja": {"flag": "jp", "name": "Japanese"},
-    "de": {"flag": "de", "name": "German"},
-    "pt": {"flag": "pt", "name": "Portuguese"},
-    "pt_BR": {"flag": "br", "name": "Brazilian Portuguese"},
-    "ru": {"flag": "ru", "name": "Russian"},
-    "ko": {"flag": "kr", "name": "Korean"},
+    "en": {"flag": "us", "name": "English", "moment_locale": "en", "humanize_locale": "en"},
+    "it": {"flag": "it", "name": "Italian", "moment_locale": "it", "humanize_locale": "en"},
+    "fr": {"flag": "fr", "name": "French", "moment_locale": "fr", "humanize_locale": "fr_FR"},
+    "zh": {"flag": "cn", "name": "Chinese", "moment_locale": "zh-cn", "humanize_locale": "zh_CN"},
+    "ja": {"flag": "jp", "name": "Japanese", "moment_locale": "ja", "humanize_locale": "en"},
+    "de": {"flag": "de", "name": "German", "moment_locale": "de", "humanize_locale": "de_DE"},
+    "pt": {"flag": "pt", "name": "Portuguese", "moment_locale": "pt", "humanize_locale": "en"},
+    "pt_BR": {"flag": "br", "name": "Brazilian Portuguese", "moment_locale": "pt-br", "humanize_locale": "pt_BR"},
+    "ru": {"flag": "ru", "name": "Russian", "moment_locale": "ru", "humanize_locale": "ru_RU"},
+    "ko": {"flag": "kr", "name": "Korean", "moment_locale": "ko", "humanize_locale": "ko_KR"},
 }
 
 # ---------------------------------------------------
@@ -679,9 +679,6 @@ SEND_FILE_MAX_AGE_DEFAULT = 60 * 60 * 24 * 365  # Cache static resources
 # URI to database storing the example data, points to
 # SQLALCHEMY_DATABASE_URI by default if set to `None`
 SQLALCHEMY_EXAMPLES_URI = None
-
-# 添加后台计算时间的本地化适配
-HUMANIZE_LOCAL = "zh_CN"
 
 if CONFIG_PATH_ENV_VAR in os.environ:
     # Explicitly import config module that is not necessarily in pythonpath; useful
