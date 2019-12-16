@@ -84,3 +84,4 @@ wtforms-json==0.3.3
 wtforms==2.2.1            # via flask-wtf, wtforms-json
 pydruid==0.5.7
 requests==2.22.0
+flask_oauthlib==0.9.5

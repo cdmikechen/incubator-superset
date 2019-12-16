@@ -17,7 +17,8 @@
  * under the License.
  */
 import { createDurationFormatter, getNumberFormatter, getNumberFormatterRegistry, NumberFormats } from '@superset-ui/number-format';
-import { getTimeFormatterRegistry, smartDateFormatter, smartDateVerboseFormatter } from '@superset-ui/time-format';
+import { getTimeFormatterRegistry, getSmartDateFormatter, getSmartDateVerboseFormatter, setLocaleDef } from '@superset-ui/time-format';
+import {default as d3Locales} from '../d3TimeLocales';
 
 export default function setupFormatters() {
   getNumberFormatterRegistry()
@@ -57,9 +58,14 @@ export default function setupFormatters() {
     .registerValue('$,.f', getNumberFormatter('$,.4f'))
     .registerValue('DURATION', createDurationFormatter())
     .registerValue('DURATION_SUB', createDurationFormatter({ formatSubMilliseconds: true }));
+}
 
+export function setupTimeFormatters(timeLocaleKey) {
+  // 设置时区
+  setLocaleDef(d3Locales[timeLocaleKey]);
+  // 注册日期转化函数
   getTimeFormatterRegistry()
-    .registerValue('smart_date', smartDateFormatter)
-    .registerValue('smart_date_verbose', smartDateVerboseFormatter)
+    .registerValue('smart_date', getSmartDateFormatter())
+    .registerValue('smart_date_verbose', getSmartDateVerboseFormatter())
     .setDefaultKey('smart_date');
 }

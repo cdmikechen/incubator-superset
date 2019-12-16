@@ -206,16 +206,16 @@ BABEL_DEFAULT_LOCALE = "zh"
 BABEL_DEFAULT_FOLDER = "superset/translations"
 # The allowed translation for you app
 LANGUAGES = {
-    "en": {"flag": "us", "name": "English", "moment_locale": "en", "humanize_locale": "en"},
-    "it": {"flag": "it", "name": "Italian", "moment_locale": "it", "humanize_locale": "en"},
-    "fr": {"flag": "fr", "name": "French", "moment_locale": "fr", "humanize_locale": "fr_FR"},
-    "zh": {"flag": "cn", "name": "Chinese", "moment_locale": "zh-cn", "humanize_locale": "zh_CN"},
-    "ja": {"flag": "jp", "name": "Japanese", "moment_locale": "ja", "humanize_locale": "en"},
-    "de": {"flag": "de", "name": "German", "moment_locale": "de", "humanize_locale": "de_DE"},
-    "pt": {"flag": "pt", "name": "Portuguese", "moment_locale": "pt", "humanize_locale": "en"},
-    "pt_BR": {"flag": "br", "name": "Brazilian Portuguese", "moment_locale": "pt-br", "humanize_locale": "pt_BR"},
-    "ru": {"flag": "ru", "name": "Russian", "moment_locale": "ru", "humanize_locale": "ru_RU"},
-    "ko": {"flag": "kr", "name": "Korean", "moment_locale": "ko", "humanize_locale": "ko_KR"},
+    "en": {"flag": "us", "name": "English", "moment_locale": "en", "humanize_locale": "en", "time_locale": "en-US"},
+    "it": {"flag": "it", "name": "Italian", "moment_locale": "it", "humanize_locale": "en", "time_locale": "it-IT"},
+    "fr": {"flag": "fr", "name": "French", "moment_locale": "fr", "humanize_locale": "fr_FR", "time_locale": "fr-FR"},
+    "zh": {"flag": "cn", "name": "Chinese", "moment_locale": "zh-cn", "humanize_locale": "zh_CN", "time_locale": "zh-CN"},
+    "ja": {"flag": "jp", "name": "Japanese", "moment_locale": "ja", "humanize_locale": "en", "time_locale": "ja-JP"},
+    "de": {"flag": "de", "name": "German", "moment_locale": "de", "humanize_locale": "de_DE", "time_locale": "de-DE"},
+    "pt": {"flag": "pt", "name": "Portuguese", "moment_locale": "pt", "humanize_locale": "en", "time_locale": "en-US"},
+    "pt_BR": {"flag": "br", "name": "Brazilian Portuguese", "moment_locale": "pt-br", "humanize_locale": "pt_BR", "time_locale": "pt-BR"},
+    "ru": {"flag": "ru", "name": "Russian", "moment_locale": "ru", "humanize_locale": "ru_RU", "time_locale": "ru-RU"},
+    "ko": {"flag": "kr", "name": "Korean", "moment_locale": "ko", "humanize_locale": "ko_KR", "time_locale": "ko-KR"},
 }
 
 # ---------------------------------------------------

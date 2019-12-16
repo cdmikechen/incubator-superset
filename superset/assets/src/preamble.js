@@ -21,7 +21,7 @@ import moment from 'moment';
 import { configure } from '@superset-ui/translation';
 import setupClient from './setup/setupClient';
 import setupColors from './setup/setupColors';
-import setupFormatters from './setup/setupFormatters';
+import {default as setupFormatters, setupTimeFormatters} from './setup/setupFormatters';
 
 // Configure translation
 if (typeof window !== 'undefined') {
@@ -31,6 +31,7 @@ if (typeof window !== 'undefined') {
     const languagePack = bootstrapData.common.language_pack;
     configure({ languagePack });
     moment.locale(bootstrapData.common.moment_locale);
+    setupTimeFormatters(bootstrapData.common.time_locale)
   } else {
     configure();
   }

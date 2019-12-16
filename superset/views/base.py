@@ -180,6 +180,7 @@ def common_bootstrap_payload():
         "conf": {k: conf.get(k) for k in FRONTEND_CONF_KEYS},
         "locale": locale,
         "moment_locale": conf.get("LANGUAGES").get(locale).get("moment_locale"),
+        "time_locale": conf.get("LANGUAGES").get(locale).get("time_locale"),
         "language_pack": get_language_pack(locale),
         "feature_flags": get_feature_flags(),
     }
