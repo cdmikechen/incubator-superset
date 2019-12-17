@@ -63,8 +63,9 @@ try:
         MapLookupExtraction,
         RegexExtraction,
         RegisteredLookupExtraction,
+        TimeFormatExtraction,
     )
-    from pydruid.utils.filters import Dimension, Filter
+    from pydruid.utils.filters import Bound, Dimension, Filter
     from pydruid.utils.having import Aggregation, Having
     from pydruid.utils.postaggregator import (
         Const,
@@ -1440,6 +1441,10 @@ class DruidDatasource(Model, BaseDatasource):
                 extraction_fn = RegexExtraction(fn["expr"])
             elif ext_type == "registeredLookup":
                 extraction_fn = RegisteredLookupExtraction(fn.get("lookup"))
+            elif ext_type == "timeFormat":
+                extraction_fn = TimeFormatExtraction(
+                    fn.get("format"), fn.get("locale"), fn.get("timeZone")
+                )
             else:
                 raise Exception(_("Unsupported extraction function: " + ext_type))
         return (col, extraction_fn)
@@ -1519,48 +1524,44 @@ class DruidDatasource(Model, BaseDatasource):
             # For the ops below, could have used pydruid's Bound,
             # but it doesn't support extraction functions
             elif op == ">=":
-                cond = Filter(
-                    type="bound",
+                cond = Bound(
                     extraction_function=extraction_fn,
                     dimension=col,
                     lowerStrict=False,
                     upperStrict=False,
                     lower=eq,
                     upper=None,
-                    alphaNumeric=is_numeric_col,
+                    ordering=cls._get_ordering(is_numeric_col),
                 )
             elif op == "<=":
-                cond = Filter(
-                    type="bound",
+                cond = Bound(
                     extraction_function=extraction_fn,
                     dimension=col,
                     lowerStrict=False,
                     upperStrict=False,
                     lower=None,
                     upper=eq,
-                    alphaNumeric=is_numeric_col,
+                    ordering=cls._get_ordering(is_numeric_col),
                 )
             elif op == ">":
-                cond = Filter(
-                    type="bound",
+                cond = Bound(
                     extraction_function=extraction_fn,
                     lowerStrict=True,
                     upperStrict=False,
                     dimension=col,
                     lower=eq,
                     upper=None,
-                    alphaNumeric=is_numeric_col,
+                    ordering=cls._get_ordering(is_numeric_col),
                 )
             elif op == "<":
-                cond = Filter(
-                    type="bound",
+                cond = Bound(
                     extraction_function=extraction_fn,
                     upperStrict=True,
                     lowerStrict=False,
                     dimension=col,
                     lower=None,
                     upper=eq,
-                    alphaNumeric=is_numeric_col,
+                    ordering=cls._get_ordering(is_numeric_col),
                 )
             elif op == "IS NULL":
                 cond = Filter(dimension=col, value="")
@@ -1573,6 +1574,10 @@ class DruidDatasource(Model, BaseDatasource):
                 filters = cond
 
         return filters
+
+    @staticmethod
+    def _get_ordering(is_numeric_col: bool) -> str:
+        return "numeric" if is_numeric_col else "lexicographic"
 
     def _get_having_obj(self, col: str, op: str, eq: str) -> "Having":
         cond = None

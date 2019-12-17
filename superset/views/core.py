@@ -20,7 +20,7 @@ import re
 from contextlib import closing
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import cast, List, Optional, Union
+from typing import Any, cast, Dict, List, Optional, Union
 from urllib import parse
 
 import backoff
@@ -40,12 +40,11 @@ from flask import (
     url_for,
 )
 from flask_appbuilder import expose
-from flask_appbuilder.actions import action
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.security.decorators import has_access, has_access_api
 from flask_appbuilder.security.sqla import models as ab_models
 from flask_babel import gettext as __, lazy_gettext as _
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, Integer, or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from werkzeug.routing import BaseConverter
@@ -91,6 +90,7 @@ from .base import (
     BaseFilter,
     BaseSupersetView,
     check_ownership,
+    common_bootstrap_payload,
     CsvResponse,
     data_payload_response,
     DeleteMixin,
@@ -102,7 +102,9 @@ from .base import (
     json_success,
     SupersetModelView,
 )
-from .database import api as database_api, views as in_views
+from .dashboard import views as dash_views
+from .dashboard.filters import DashboardFilter
+from .database import views as in_views
 from .utils import (
     apply_display_max_row_limit,
     bootstrap_user_data,
@@ -252,69 +254,6 @@ class SliceFilter(BaseFilter):
         return query.filter(
             or_(self.model.perm.in_(perms), self.model.schema_perm.in_(schema_perms))
         )
-
-
-class DashboardFilter(BaseFilter):
-    """
-    List dashboards with the following criteria:
-        1. Those which the user owns
-        2. Those which the user has favorited
-        3. Those which have been published (if they have access to at least one slice)
-
-    If the user is an admin show them all dashboards.
-    This means they do not get curation but can still sort by "published"
-    if they wish to see those dashboards which are published first
-    """
-
-    def apply(self, query, func):
-        Dash = models.Dashboard
-        User = ab_models.User
-        Slice = models.Slice
-        Favorites = models.FavStar
-
-        user_roles = [role.name.lower() for role in list(get_user_roles())]
-        if "admin" in user_roles:
-            return query
-
-        datasource_perms = security_manager.user_view_menu_names("datasource_access")
-        schema_perms = security_manager.user_view_menu_names("schema_access")
-        all_datasource_access = security_manager.all_datasource_access()
-        published_dash_query = (
-            db.session.query(Dash.id)
-            .join(Dash.slices)
-            .filter(
-                and_(
-                    Dash.published == True,  # noqa
-                    or_(
-                        Slice.perm.in_(datasource_perms),
-                        Slice.schema_perm.in_(schema_perms),
-                        all_datasource_access,
-                    ),
-                )
-            )
-        )
-
-        users_favorite_dash_query = db.session.query(Favorites.obj_id).filter(
-            and_(
-                Favorites.user_id == User.get_user_id(),
-                Favorites.class_name == "Dashboard",
-            )
-        )
-        owner_ids_query = (
-            db.session.query(Dash.id)
-            .join(Dash.owners)
-            .filter(User.id == User.get_user_id())
-        )
-
-        query = query.filter(
-            or_(
-                Dash.id.in_(owner_ids_query),
-                Dash.id.in_(published_dash_query),
-                Dash.id.in_(users_favorite_dash_query),
-            )
-        )
-
-        return query
 
 
 if config["ENABLE_ACCESS_REQUEST"]:
@@ -494,163 +433,14 @@ class SliceAddView(SliceModelView):
 appbuilder.add_view_no_menu(SliceAddView)
 
 
-class DashboardModelView(SupersetModelView, DeleteMixin):
-    route_base = "/dashboard"
-    datamodel = SQLAInterface(models.Dashboard)
-
-    list_title = _("Dashboards")
-    show_title = _("Show Dashboard")
-    add_title = _("Add Dashboard")
-    edit_title = _("Edit Dashboard")
-
-    list_columns = ["dashboard_link", "creator", "published", "modified"]
-    order_columns = ["modified", "published"]
-    edit_columns = [
-        "dashboard_title",
-        "slug",
-        "owners",
-        "position_json",
-        "css",
-        "json_metadata",
-        "published",
-    ]
-    show_columns = edit_columns + ["table_names", "charts"]
-    search_columns = ("dashboard_title", "slug", "owners", "published")
-    add_columns = edit_columns
-    base_order = ("changed_on", "desc")
-    description_columns = {
-        "position_json": _(
-            "This json object describes the positioning of the widgets in "
-            "the dashboard. It is dynamically generated when adjusting "
-            "the widgets size and positions by using drag & drop in "
-            "the dashboard view"
-        ),
-        "css": _(
-            "The CSS for individual dashboards can be altered here, or "
-            "in the dashboard view where changes are immediately "
-            "visible"
-        ),
-        "slug": _("To get a readable URL for your dashboard"),
-        "json_metadata": _(
-            "This JSON object is generated dynamically when clicking "
-            "the save or overwrite button in the dashboard view. It "
-            "is exposed here for reference and for power users who may "
-            "want to alter specific parameters."
-        ),
-        "owners": _("Owners is a list of users who can alter the dashboard."),
-        "published": _(
-            "Determines whether or not this dashboard is "
-            "visible in the list of all dashboards"
-        ),
-    }
-    base_filters = [["slice", DashboardFilter, lambda: []]]
-    label_columns = {
-        "dashboard_link": _("Dashboard"),
-        "dashboard_title": _("Title"),
-        "slug": _("Slug"),
-        "charts": _("Charts"),
-        "owners": _("Owners"),
-        "creator": _("Creator"),
-        "modified": _("Modified"),
-        "position_json": _("Position JSON"),
-        "css": _("CSS"),
-        "json_metadata": _("JSON Metadata"),
-        "table_names": _("Underlying Tables"),
-    }
-
-    def pre_add(self, obj):
-        obj.slug = obj.slug or None
-        if obj.slug:
-            obj.slug = obj.slug.strip()
-            obj.slug = obj.slug.replace(" ", "-")
-            obj.slug = re.sub(r"[^\w\-]+", "", obj.slug)
-        if g.user not in obj.owners:
-            obj.owners.append(g.user)
-        utils.validate_json(obj.json_metadata)
-        utils.validate_json(obj.position_json)
-        owners = [o for o in obj.owners]
-        for slc in obj.slices:
-            slc.owners = list(set(owners) | set(slc.owners))
-
-    def pre_update(self, obj):
-        check_ownership(obj)
-        self.pre_add(obj)
-
-    def pre_delete(self, obj):
-        check_ownership(obj)
-
-    @action("mulexport", __("Export"), __("Export dashboards?"), "fa-database")
-    def mulexport(self, items):
-        if not isinstance(items, list):
-            items = [items]
-        ids = "".join("&id={}".format(d.id) for d in items)
-        return redirect("/dashboard/export_dashboards_form?{}".format(ids[1:]))
-
-    @event_logger.log_this
-    @has_access
-    @expose("/export_dashboards_form")
-    def download_dashboards(self):
-        if request.args.get("action") == "go":
-            ids = request.args.getlist("id")
-            return Response(
-                models.Dashboard.export_dashboards(ids),
-                headers=generate_download_headers("json"),
-                mimetype="application/text",
-            )
-        return self.render_template(
-            "superset/export_dashboards.html", dashboards_url="/dashboard/list"
-        )
-
-
 appbuilder.add_view(
-    DashboardModelView,
+    dash_views.DashboardModelView,
     "Dashboards",
     label=__("Dashboards"),
     icon="fa-dashboard",
     category="",
     category_icon="",
 )
-
-
-class DashboardModelViewAsync(DashboardModelView):
-    route_base = "/dashboardasync"
-    list_columns = [
-        "id",
-        "dashboard_link",
-        "creator",
-        "modified",
-        "dashboard_title",
-        "changed_on",
-        "url",
-        "changed_by_name",
-    ]
-    label_columns = {
-        "dashboard_link": _("Dashboard"),
-        "dashboard_title": _("Title"),
-        "creator": _("Creator"),
-        "modified": _("Modified"),
-    }
-
-
-appbuilder.add_view_no_menu(DashboardModelViewAsync)
-
-
-class DashboardAddView(DashboardModelView):
-    route_base = "/dashboardaddview"
-    list_columns = [
-        "id",
-        "dashboard_link",
-        "creator",
-        "modified",
-        "dashboard_title",
-        "changed_on",
-        "url",
-        "changed_by_name",
-    ]
-    show_columns = list(set(DashboardModelView.edit_columns + list_columns))
-
-
-appbuilder.add_view_no_menu(DashboardAddView)
 
 
 @talisman(force_https=False)
@@ -1292,7 +1082,7 @@ class Superset(BaseSupersetView):
             "standalone": standalone,
             "user_id": user_id,
             "forced_height": request.args.get("height"),
-            "common": self.common_bootstrap_payload(),
+            "common": common_bootstrap_payload(),
         }
         table_name = (
             datasource.table_name
@@ -2229,7 +2019,7 @@ class Superset(BaseSupersetView):
             "user_id": g.user.get_id(),
             "dashboard_data": dashboard_data,
             "datasources": {ds.uid: ds.data for ds in datasources},
-            "common": self.common_bootstrap_payload(),
+            "common": common_bootstrap_payload(),
             "editMode": edit_mode,
             "urlParams": url_params,
         }
@@ -2638,14 +2428,23 @@ class Superset(BaseSupersetView):
         except Exception as e:
             logging.exception(e)
             msg = _(
-                f"{validator.name} was unable to check your query.\nPlease "
-                "make sure that any services it depends on are available\n"
+                f"{validator.name} was unable to check your query.\n"
+                "Please recheck your query.\n"
                 f"Exception: {e}"
             )
-            return json_error_response(f"{msg}")
+            # Return as a 400 if the database error message says we got a 4xx error
+            if re.search(r"([\W]|^)4\d{2}([\W]|$)", str(e)):
+                return json_error_response(f"{msg}", status=400)
+            else:
+                return json_error_response(f"{msg}")
 
     def _sql_json_async(
-        self, session: Session, rendered_query: str, query: Query, expand_data: bool
+        self,
+        session: Session,
+        rendered_query: str,
+        query: Query,
+        expand_data: bool,
+        log_params: Dict[str, Any],
     ) -> str:
         """
             Send SQL JSON query to celery workers
@@ -2666,6 +2465,7 @@ class Superset(BaseSupersetView):
                 user_name=g.user.username if g.user else None,
                 start_time=now_as_float(),
                 expand_data=expand_data,
+                log_params=log_params,
             )
         except Exception as e:
             logging.exception(f"Query {query.id}: {e}")
@@ -2690,7 +2490,12 @@ class Superset(BaseSupersetView):
         return resp
 
     def _sql_json_sync(
-        self, session: Session, rendered_query: str, query: Query, expand_data: bool
+        self,
+        session: Session,
+        rendered_query: str,
+        query: Query,
+        expand_data: bool,
+        log_params: Dict[str, Any],
     ) -> str:
         """
             Execute SQL query (sql json)
@@ -2715,6 +2520,7 @@ class Superset(BaseSupersetView):
                     store_results=store_results,
                     user_name=g.user.username if g.user else None,
                     expand_data=expand_data,
+                    log_params=log_params,
                 )
 
             payload = json.dumps(
@@ -2734,9 +2540,12 @@ class Superset(BaseSupersetView):
     @expose("/sql_json/", methods=["POST"])
     @event_logger.log_this
     def sql_json(self):
-        return self.sql_json_exec(request.json)
+        log_params = {
+            "USER_AGENT": cast(Optional[str], request.headers.get("USER_AGENT"))
+        }
+        return self.sql_json_exec(request.json, log_params)
 
-    def sql_json_exec(self, query_params: dict):
+    def sql_json_exec(self, query_params: dict, log_params: dict):
         """Runs arbitrary sql and returns data as json"""
         # Collect Values
         database_id: int = cast(int, query_params.get("database_id"))
@@ -2842,9 +2651,13 @@ class Superset(BaseSupersetView):
 
         # Async request.
         if async_flag:
-            return self._sql_json_async(session, rendered_query, query, expand_data)
+            return self._sql_json_async(
+                session, rendered_query, query, expand_data, log_params
+            )
         # Sync request.
-        return self._sql_json_sync(session, rendered_query, query, expand_data)
+        return self._sql_json_sync(
+            session, rendered_query, query, expand_data, log_params
+        )
 
     @has_access
     @expose("/csv/<client_id>")
@@ -3032,7 +2845,7 @@ class Superset(BaseSupersetView):
 
         payload = {
             "user": bootstrap_user_data(g.user),
-            "common": self.common_bootstrap_payload(),
+            "common": common_bootstrap_payload(),
         }
 
         return self.render_template(
@@ -3058,7 +2871,7 @@ class Superset(BaseSupersetView):
 
         payload = {
             "user": bootstrap_user_data(user, include_perms=True),
-            "common": self.common_bootstrap_payload(),
+            "common": common_bootstrap_payload(),
         }
 
         return self.render_template(
@@ -3070,27 +2883,25 @@ class Superset(BaseSupersetView):
             ),
         )
 
-    @has_access
-    @expose("/sqllab")
-    def sqllab(self):
-        """SQL Editor"""
-
+    @staticmethod
+    def _get_sqllab_payload(user_id: int) -> Dict[str, Any]:
         # send list of tab state ids
-        tab_state_ids = (
+        tabs_state = (
             db.session.query(TabState.id, TabState.label)
-            .filter_by(user_id=g.user.get_id())
+            .filter_by(user_id=user_id)
             .all()
         )
+        tab_state_ids = [tab_state[0] for tab_state in tabs_state]
         # return first active tab, or fallback to another one if no tab is active
         active_tab = (
             db.session.query(TabState)
-            .filter_by(user_id=g.user.get_id())
+            .filter_by(user_id=user_id)
             .order_by(TabState.active.desc())
             .first()
         )
 
-        databases = {}
-        queries = {}
+        databases: Dict[int, Any] = {}
+        queries: Dict[str, Any] = {}
 
         # These are unnecessary if sqllab backend persistence is disabled
         if is_feature_enabled("SQLLAB_BACKEND_PERSISTENCE"):
@@ -3100,26 +2911,38 @@ class Superset(BaseSupersetView):
                 }
                 for database in db.session.query(models.Database).all()
             }
+            # return all user queries associated with existing SQL editors
             user_queries = (
-                db.session.query(Query).filter_by(user_id=g.user.get_id()).all()
+                db.session.query(Query)
+                .filter_by(user_id=user_id)
+                .filter(Query.sql_editor_id.cast(Integer).in_(tab_state_ids))
+                .all()
             )
             queries = {
                 query.client_id: {k: v for k, v in query.to_dict().items()}
                 for query in user_queries
             }
 
-        d = {
+        return {
             "defaultDbId": config["SQLLAB_DEFAULT_DBID"],
-            "common": self.common_bootstrap_payload(),
-            "tab_state_ids": tab_state_ids,
+            "common": common_bootstrap_payload(),
+            "tab_state_ids": tabs_state,
             "active_tab": active_tab.to_dict() if active_tab else None,
             "databases": databases,
             "queries": queries,
         }
+
+    @has_access
+    @expose("/sqllab")
+    def sqllab(self):
+        """SQL Editor"""
+        payload = self._get_sqllab_payload(g.user.get_id())
+        bootstrap_data = json.dumps(
+            payload, default=utils.pessimistic_json_iso_dttm_ser
+        )
+
         return self.render_template(
-            "superset/basic.html",
-            entry="sqllab",
-            bootstrap_data=json.dumps(d, default=utils.pessimistic_json_iso_dttm_ser),
+            "superset/basic.html", entry="sqllab", bootstrap_data=bootstrap_data
         )
 
     @api
