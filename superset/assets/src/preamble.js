@@ -24,6 +24,7 @@ import setupColors from './setup/setupColors';
 import {default as setupFormatters, setupTimeFormatters} from './setup/setupFormatters';
 
 // Configure translation
+let timeLocale = "zh-CN"
 if (typeof window !== 'undefined') {
   const root = document.getElementById('app');
   const bootstrapData = root ? JSON.parse(root.getAttribute('data-bootstrap')) : {};
@@ -31,7 +32,8 @@ if (typeof window !== 'undefined') {
     const languagePack = bootstrapData.common.language_pack;
     configure({ languagePack });
     moment.locale(bootstrapData.common.moment_locale);
-    setupTimeFormatters(bootstrapData.common.time_locale)
+    timeLocale = bootstrapData.common.time_locale;
+    setupTimeFormatters(timeLocale);
   } else {
     configure();
   }

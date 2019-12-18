@@ -17,7 +17,10 @@
  * under the License.
  */
 import { createDurationFormatter, getNumberFormatter, getNumberFormatterRegistry, NumberFormats } from '@superset-ui/number-format';
-import { getTimeFormatterRegistry, getSmartDateFormatter, getSmartDateVerboseFormatter, setLocaleDef } from '@superset-ui/time-format';
+import {
+  getTimeFormatterRegistry, smartDateFormatter, smartDateVerboseFormatter,
+  setLocaleDef, restSmartDateFormatter, restSmartDateVerboseFormatter
+} from '@superset-ui/time-format';
 import {default as d3Locales} from '../d3TimeLocales';
 
 export default function setupFormatters() {
@@ -63,9 +66,11 @@ export default function setupFormatters() {
 export function setupTimeFormatters(timeLocaleKey) {
   // 设置时区
   setLocaleDef(d3Locales[timeLocaleKey]);
+  restSmartDateFormatter();
+  restSmartDateVerboseFormatter();
   // 注册日期转化函数
   getTimeFormatterRegistry()
-    .registerValue('smart_date', getSmartDateFormatter())
-    .registerValue('smart_date_verbose', getSmartDateVerboseFormatter())
+    .registerValue('smart_date', smartDateFormatter)
+    .registerValue('smart_date_verbose', smartDateVerboseFormatter)
     .setDefaultKey('smart_date');
 }
