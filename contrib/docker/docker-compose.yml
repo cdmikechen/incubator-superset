@@ -19,6 +19,7 @@ services:
   redis:
     image: redis:3.2
     restart: unless-stopped
+    command: redis-server --requirepass bigdata
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
@@ -49,20 +50,26 @@ services:
       POSTGRES_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: bigdata
+      OAUTH_BASE_URL: http://192.168.11.60:8444/cas/oauth2.0/
+      OAUTH_TOKEN_URL: http://192.168.11.60:8444/cas/oauth2.0/accessToken
+      OAUTH_AUTHORIZE_URL: http://192.168.11.60:8444/cas/oauth2.0/authorize
+      OAUTH_KEY: 100001
+      OAUTH_SECRET: 100001abcdeft
       # If using production, comment development volume below
-      #SUPERSET_ENV: production
-      SUPERSET_ENV: development
+      SUPERSET_ENV: production
+#      SUPERSET_ENV: development
     user: root:root
     ports:
       - 8088:8088
     depends_on:
       - postgres
       - redis
-    volumes:
+#    volumes:
       # this is needed to communicate with the postgres and redis services
-      - ./superset_config.py:/home/superset/superset/superset_config.py
+#      - ./superset_config.py:/home/superset/superset/superset_config.py
       # this is needed for development, remove with SUPERSET_ENV=production
-      - ../../superset:/home/superset/superset
+#      - ../../superset:/home/superset/superset
 
 volumes:
   postgres:

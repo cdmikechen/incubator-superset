@@ -17,6 +17,12 @@
 #
 set -ex
 
+WORKER=2
+if [ -n "${WORKER_THREAD}" ];
+then
+    WORKER=${WORKER_THREAD}
+fi
+
 if [ "$#" -ne 0 ]; then
     exec "$@"
 elif [ "$SUPERSET_ENV" = "development" ]; then
@@ -28,7 +34,7 @@ elif [ "$SUPERSET_ENV" = "development" ]; then
 elif [ "$SUPERSET_ENV" = "production" ]; then
     celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
     exec gunicorn --bind  0.0.0.0:8088 \
-        --workers $((2 * $(getconf _NPROCESSORS_ONLN) + 1)) \
+        --workers $((2 * WORKER + 1)) \
         --timeout 60 \
         --limit-request-line 0 \
         --limit-request-field_size 0 \
