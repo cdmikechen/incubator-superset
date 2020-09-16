@@ -67,6 +67,8 @@ OAUTH_TOKEN_URL = get_env_variable('OAUTH_TOKEN_URL')
 OAUTH_AUTHORIZE_URL = get_env_variable('OAUTH_AUTHORIZE_URL')
 OAUTH_KEY = get_env_variable('OAUTH_KEY')
 OAUTH_SECRET = get_env_variable('OAUTH_SECRET')
+OAUTH2_CLIENT_TYPE = get_env_variable('OAUTH_CLIENT_TYPE')
+
 
 from superset.security import SupersetSecurityManager
 import logging
@@ -76,9 +78,13 @@ class CustomSsoSecurityManager(SupersetSecurityManager):
 
     def oauth_user_info(self, provider, response=None):
         logging.debug("Oauth2 provider: {0}.".format(provider))
-        if provider == 'casOauth2':
-            # As example, this line request a GET to base_url + '/' + userDetails with Bearer Authentication,
-            # and expects that authorization server checks the token, and response with user details
+        if OAUTH2_CLIENT_TYPE == 'keycloakOauth2' or OAUTH2_CLIENT_TYPE is None :
+            me = self.appbuilder.sm.oauth_remotes[provider].get('userinfo').data
+            logging.debug("user_data: {0}".format(me))
+            profile = {'name': me['name'], 'email': me.get('mail', ''), 'id': '', 'username': me['preferred_username'], 'first_name': me['given_name'], 'last_name': ''}
+            logging.debug("profile: {0}".format(profile))
+            return profile
+        elif OAUTH2_CLIENT_TYPE == 'casOauth2':
             me = self.appbuilder.sm.oauth_remotes[provider].get('profile').data
             logging.debug("user_data: {0}".format(me))
             return {'name': me['attributes']['cn'], 'email': me['attributes'].get('mail', ''), 'id': me['id'],
@@ -94,26 +100,19 @@ from flask_appbuilder.security.manager import AUTH_OAUTH
 AUTH_TYPE = AUTH_OAUTH
 OAUTH_PROVIDERS = [
     {
-        'name': 'casOauth2',
-         'token_key': 'access_token',  # Name of the token in the response of access_token_url
-         'icon': 'fa-address-card',  # Icon for the provider
-         'remote_app': {
-             'consumer_key': OAUTH_KEY,  # Client Id (Identify Superset application)
-             'consumer_secret': OAUTH_SECRET,  # Secret for this Client Id (Identify Superset application)
-             'request_token_params': {},
-             'access_token_method': 'POST',  # HTTP Method to call access_token_url
-             'access_token_params': {  # Additional parameters for calls to access_token_url
-                 'client_id': OAUTH_KEY,
-                 'client_secret': OAUTH_SECRET
-             },
-             'access_token_headers': {  # Additional headers for calls to access_token_url
-                 'Authorization': 'Basic MTAwMDAxOjEwMDAwMWFiY2RlZnQ='
-             },
-             'base_url': OAUTH_BASE_URL,
-             'access_token_url': OAUTH_TOKEN_URL,
-             'authorize_url': OAUTH_AUTHORIZE_URL
-         }
-     }
+        'name': 'oauth2_client',
+        'token_key': 'access_token',
+        'icon': 'fa-openid', # 用的是 https://fontawesome.com/v4.7.0/icons/
+        'remote_app': {
+            'consumer_key': OAUTH_KEY,
+            'consumer_secret': OAUTH_SECRET,
+            'request_token_params': {},
+            'access_token_method': 'POST',
+            'base_url': OAUTH_BASE_URL,
+            'access_token_url': OAUTH_TOKEN_URL,
+            'authorize_url': OAUTH_AUTHORIZE_URL
+        }
+    }
 ]
 
 # Will allow user self registration, allowing to create Flask users from Authorized User

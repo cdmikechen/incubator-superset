@@ -56,3 +56,10 @@ the volumes needed for development and change the variable `SUPERSET_ENV` to `pr
 
 If you are attempting to build on a Mac and it exits with 137 you need to increase your docker resources.
 OSX instructions: https://docs.docker.com/docker-for-mac/#advanced (Search for memory)
+
+## 打包镜像
+```bash
+docker build -t bigdata/superset:0.35.1-keycloak -f contrib/docker/Dockerfile .
+docker tag bigdata/superset:0.35.1-keycloak harbor.sypesco.com:5000/bigdata/superset:0.35.1-keycloak
+docker push harbor.sypesco.com:5000/bigdata/superset:0.35.1-keycloak 
+```

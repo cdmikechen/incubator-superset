@@ -39,6 +39,16 @@ elif [ "$SUPERSET_ENV" = "production" ]; then
         --limit-request-line 0 \
         --limit-request-field_size 0 \
         superset:app
+elif [ "$SUPERSET_ENV" = "production_https" ]; then
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
+    exec gunicorn --bind  0.0.0.0:8088 \
+        --workers $((2 * WORKER + 1)) \
+        --timeout 60 \
+        --limit-request-line 0 \
+        --limit-request-field_size 0 \
+        --certfile=$CERT_FILE_PATH \
+        --keyfile=$KEY_FILE_PATH \
+        superset:app
 else
     superset --help
 fi

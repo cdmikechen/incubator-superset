@@ -31,9 +31,12 @@
 **/*.sqllite
 **/*.swp
 
+venv/
 tests/
 docs/
 install/
 superset/assets/node_modules/
 superset/assets/cypress/
 superset/assets/coverage/
+superset/assets/.cache-loader/
+superset/assets/.terser-plugin-cache/

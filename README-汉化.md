@@ -25,3 +25,4 @@ pybabel compile -d superset/translations
 ![遍及图表](截图/editeChart.jpeg "遍及图表")
 
 后续会不定期更新汉化信息
+

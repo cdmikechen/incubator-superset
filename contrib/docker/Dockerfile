@@ -69,6 +69,6 @@ COPY contrib/docker/superset_config.py /home/superset/superset/superset_config.p
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-HEALTHCHECK CMD ["curl", "-f", "http://localhost:8088/health"]
+#HEALTHCHECK CMD ["curl", "-f", "http://localhost:8088/health"]
 
 EXPOSE 8088
