@@ -23,6 +23,11 @@ then
     WORKER=${WORKER_THREAD}
 fi
 
+if [ -n "${SUPERSET_CONFIG_APPEND}" ];
+then
+    echo "${SUPERSET_CONFIG_APPEND}" >> /home/superset/superset/superset_config.py
+fi
+
 if [ "$#" -ne 0 ]; then
     exec "$@"
 elif [ "$SUPERSET_ENV" = "development" ]; then

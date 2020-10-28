@@ -58,14 +58,14 @@ ENV PATH=/home/superset/superset/bin:$PATH \
 
 USER superset
 
-RUN cd superset/assets \
+# RUN cd superset/assets \
 #    && npm ci \
 #    && npm run build \
-    && rm -rf node_modules
+    # && rm -rf node_modules
 
 COPY contrib/docker/docker-init.sh .
 COPY contrib/docker/docker-entrypoint.sh /entrypoint.sh
-COPY contrib/docker/superset_config.py /home/superset/superset/superset_config.py
+COPY --chown=superset:superset contrib/docker/superset_config.py /home/superset/superset/superset_config.py
 
 ENTRYPOINT ["/entrypoint.sh"]
 
