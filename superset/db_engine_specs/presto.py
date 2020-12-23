@@ -14,6 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import dataclasses
 import logging
 import re
 import textwrap
@@ -22,44 +23,46 @@ from collections import defaultdict, deque
 from contextlib import closing
 from datetime import datetime
 from distutils.version import StrictVersion
-from typing import Any, cast, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, cast, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 from urllib import parse
 
+import pandas as pd
 import simplejson as json
-from sqlalchemy import Column, literal_column
+from flask_babel import gettext as __, lazy_gettext as _
+from sqlalchemy import Column, literal_column, types
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.engine.result import RowProxy
+from sqlalchemy.engine.url import URL
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import ColumnClause, Select
 
-from superset import app, is_feature_enabled, security_manager
+from superset import app, cache_manager, is_feature_enabled
 from superset.db_engine_specs.base import BaseEngineSpec
+from superset.errors import ErrorLevel, SupersetError, SupersetErrorType
 from superset.exceptions import SupersetTemplateException
-from superset.models.sql_types.presto_sql_types import type_map as presto_type_map
+from superset.models.sql_lab import Query
+from superset.models.sql_types.presto_sql_types import (
+    Array,
+    Interval,
+    Map,
+    Row,
+    TinyInteger,
+)
+from superset.result_set import destringify
 from superset.sql_parse import ParsedQuery
 from superset.utils import core as utils
 
 if TYPE_CHECKING:
     # prevent circular imports
-    from superset.models.core import Database  # pylint: disable=unused-import
+    from superset.models.core import Database
+
+COLUMN_NOT_RESOLVED_ERROR_REGEX = "line (.+?): .*Column '(.+?)' cannot be resolved"
+TABLE_DOES_NOT_EXIST_ERROR_REGEX = ".*Table (.+?) does not exist"
 
 QueryStatus = utils.QueryStatus
 config = app.config
-
-# map between Presto types and Pandas
-pandas_dtype_map = {
-    "boolean": "object",  # to support nullable bool
-    "tinyint": "Int64",  # note: capital "I" means nullable int
-    "smallint": "Int64",
-    "integer": "Int64",
-    "bigint": "Int64",
-    "real": "float64",
-    "double": "float64",
-    "varchar": "object",
-    "timestamp": "datetime64[ns]",
-    "date": "datetime64[ns]",
-    "varbinary": "object",
-}
+logger = logging.getLogger(__name__)
 
 
 def get_children(column: Dict[str, str]) -> List[Dict[str, str]]:
@@ -89,7 +92,8 @@ def get_children(column: Dict[str, str]) -> List[Dict[str, str]]:
     children_type = group["children"]
     if type_ == "ARRAY":
         return [{"name": column["name"], "type": children_type}]
-    elif type_ == "ROW":
+
+    if type_ == "ROW":
         nameless_columns = 0
         columns = []
         for child in utils.split(children_type, ","):
@@ -103,14 +107,15 @@ def get_children(column: Dict[str, str]) -> List[Dict[str, str]]:
                 nameless_columns += 1
             columns.append({"name": f"{column['name']}.{name.lower()}", "type": type_})
         return columns
-    else:
-        raise Exception(f"Unknown type {type_}!")
+
+    raise Exception(f"Unknown type {type_}!")
 
 
-class PrestoEngineSpec(BaseEngineSpec):
+class PrestoEngineSpec(BaseEngineSpec):  # pylint: disable=too-many-public-methods
     engine = "presto"
+    engine_name = "Presto"
 
-    _time_grain_functions = {
+    _time_grain_expressions = {
         None: "{col}",
         "PT1S": "date_trunc('second', CAST({col} AS TIMESTAMP))",
         "PT1M": "date_trunc('minute', CAST({col} AS TIMESTAMP))",
@@ -127,7 +132,8 @@ class PrestoEngineSpec(BaseEngineSpec):
     }
 
     @classmethod
-    def get_allow_cost_estimate(cls, version: str = None) -> bool:
+    def get_allow_cost_estimate(cls, extra: Dict[str, Any]) -> bool:
+        version = extra.get("version")
         return version is not None and StrictVersion(version) >= StrictVersion("0.319")
 
     @classmethod
@@ -174,7 +180,9 @@ class PrestoEngineSpec(BaseEngineSpec):
         return [row[0] for row in results]
 
     @classmethod
-    def _create_column_info(cls, name: str, data_type: str) -> dict:
+    def _create_column_info(
+        cls, name: str, data_type: types.TypeEngine
+    ) -> Dict[str, Any]:
         """
         Create column info object
         :param name: column name
@@ -223,7 +231,10 @@ class PrestoEngineSpec(BaseEngineSpec):
 
     @classmethod
     def _parse_structural_column(  # pylint: disable=too-many-locals,too-many-branches
-        cls, parent_column_name: str, parent_data_type: str, result: List[dict]
+        cls,
+        parent_column_name: str,
+        parent_data_type: str,
+        result: List[Dict[str, Any]],
     ) -> None:
         """
         Parse a row or array column
@@ -260,13 +271,19 @@ class PrestoEngineSpec(BaseEngineSpec):
                         field_info = cls._split_data_type(single_field, r"\s")
                         # check if there is a structural data type within
                         # overall structural data type
+                        column_type = cls.get_sqla_column_type(field_info[1])
+                        if column_type is None:
+                            column_type = types.String()
+                            logger.info(
+                                "Did not recognize type %s of column %s",
+                                field_info[1],
+                                field_info[0],
+                            )
                         if field_info[1] == "array" or field_info[1] == "row":
                             stack.append((field_info[0], field_info[1]))
                             full_parent_path = cls._get_full_name(stack)
                             result.append(
-                                cls._create_column_info(
-                                    full_parent_path, presto_type_map[field_info[1]]()
-                                )
+                                cls._create_column_info(full_parent_path, column_type)
                             )
                         else:  # otherwise this field is a basic data type
                             full_parent_path = cls._get_full_name(stack)
@@ -274,9 +291,7 @@ class PrestoEngineSpec(BaseEngineSpec):
                                 full_parent_path, field_info[0]
                             )
                             result.append(
-                                cls._create_column_info(
-                                    column_name, presto_type_map[field_info[1]]()
-                                )
+                                cls._create_column_info(column_name, column_type)
                             )
                     # If the component type ends with a structural data type, do not pop
                     # the stack. We have run across a structural data type within the
@@ -285,7 +300,7 @@ class PrestoEngineSpec(BaseEngineSpec):
                     if not (inner_type.endswith("array") or inner_type.endswith("row")):
                         stack.pop()
                 # We have an array of row objects (i.e. array(row(...)))
-                elif inner_type == "array" or inner_type == "row":
+                elif inner_type in ("array", "row"):
                     # Push a dummy object to represent the structural data type
                     stack.append(("", inner_type))
                 # We have an array of a basic data types(i.e. array(varchar)).
@@ -318,6 +333,34 @@ class PrestoEngineSpec(BaseEngineSpec):
         columns = inspector.bind.execute("SHOW COLUMNS FROM {}".format(full_table))
         return columns
 
+    column_type_mappings = (
+        (re.compile(r"^boolean.*", re.IGNORECASE), types.Boolean()),
+        (re.compile(r"^tinyint.*", re.IGNORECASE), TinyInteger()),
+        (re.compile(r"^smallint.*", re.IGNORECASE), types.SmallInteger()),
+        (re.compile(r"^integer.*", re.IGNORECASE), types.Integer()),
+        (re.compile(r"^bigint.*", re.IGNORECASE), types.BigInteger()),
+        (re.compile(r"^real.*", re.IGNORECASE), types.Float()),
+        (re.compile(r"^double.*", re.IGNORECASE), types.Float()),
+        (re.compile(r"^decimal.*", re.IGNORECASE), types.DECIMAL()),
+        (
+            re.compile(r"^varchar(\((\d+)\))*$", re.IGNORECASE),
+            lambda match: types.VARCHAR(int(match[2])) if match[2] else types.String(),
+        ),
+        (
+            re.compile(r"^char(\((\d+)\))*$", re.IGNORECASE),
+            lambda match: types.CHAR(int(match[2])) if match[2] else types.CHAR(),
+        ),
+        (re.compile(r"^varbinary.*", re.IGNORECASE), types.VARBINARY()),
+        (re.compile(r"^json.*", re.IGNORECASE), types.JSON()),
+        (re.compile(r"^date.*", re.IGNORECASE), types.DATE()),
+        (re.compile(r"^time.*", re.IGNORECASE), types.Time()),
+        (re.compile(r"^timestamp.*", re.IGNORECASE), types.TIMESTAMP()),
+        (re.compile(r"^interval.*", re.IGNORECASE), Interval()),
+        (re.compile(r"^array.*", re.IGNORECASE), Array()),
+        (re.compile(r"^map.*", re.IGNORECASE), Map()),
+        (re.compile(r"^row.*", re.IGNORECASE), Row()),
+    )
+
     @classmethod
     def get_columns(
         cls, inspector: Inspector, table_name: str, schema: Optional[str]
@@ -332,29 +375,29 @@ class PrestoEngineSpec(BaseEngineSpec):
                 (i.e. column name and data type)
         """
         columns = cls._show_columns(inspector, table_name, schema)
-        result: List[dict] = []
+        result: List[Dict[str, Any]] = []
         for column in columns:
-            try:
-                # parse column if it is a row or array
-                if is_feature_enabled("PRESTO_EXPAND_DATA") and (
-                    "array" in column.Type or "row" in column.Type
-                ):
-                    structural_column_index = len(result)
-                    cls._parse_structural_column(column.Column, column.Type, result)
-                    result[structural_column_index]["nullable"] = getattr(
-                        column, "Null", True
-                    )
-                    result[structural_column_index]["default"] = None
-                    continue
-                else:  # otherwise column is a basic data type
-                    column_type = presto_type_map[column.Type]()
-            except KeyError:
-                logging.info(
-                    "Did not recognize type {} of column {}".format(  # pylint: disable=logging-format-interpolation
-                        column.Type, column.Column
-                    )
+            # parse column if it is a row or array
+            if is_feature_enabled("PRESTO_EXPAND_DATA") and (
+                "array" in column.Type or "row" in column.Type
+            ):
+                structural_column_index = len(result)
+                cls._parse_structural_column(column.Column, column.Type, result)
+                result[structural_column_index]["nullable"] = getattr(
+                    column, "Null", True
                 )
-                column_type = "OTHER"
+                result[structural_column_index]["default"] = None
+                continue
+
+            # otherwise column is a basic data type
+            column_type = cls.get_sqla_column_type(column.Type)
+            if column_type is None:
+                column_type = types.String()
+                logger.info(
+                    "Did not recognize type %s of column %s",
+                    str(column.Type),
+                    str(column.Column),
+                )
             column_info = cls._create_column_info(column.Column, column_type)
             column_info["nullable"] = getattr(column, "Null", True)
             column_info["default"] = None
@@ -371,7 +414,7 @@ class PrestoEngineSpec(BaseEngineSpec):
         return column_name.startswith('"') and column_name.endswith('"')
 
     @classmethod
-    def _get_fields(cls, cols: List[dict]) -> List[ColumnClause]:
+    def _get_fields(cls, cols: List[Dict[str, Any]]) -> List[ColumnClause]:
         """
         Format column clauses where names are in quotes and labels are specified
         :param cols: columns
@@ -406,11 +449,10 @@ class PrestoEngineSpec(BaseEngineSpec):
     @classmethod
     def select_star(  # pylint: disable=too-many-arguments
         cls,
-        database,
+        database: "Database",
         table_name: str,
         engine: Engine,
-        sql: Optional[str] = None,
-        schema: str = None,
+        schema: Optional[str] = None,
         limit: int = 100,
         show_cols: bool = False,
         indent: bool = True,
@@ -433,7 +475,6 @@ class PrestoEngineSpec(BaseEngineSpec):
             database,
             table_name,
             engine,
-            sql,
             schema,
             limit,
             show_cols,
@@ -444,7 +485,7 @@ class PrestoEngineSpec(BaseEngineSpec):
 
     @classmethod
     def estimate_statement_cost(  # pylint: disable=too-many-locals
-        cls, statement: str, database, cursor, user_name: str
+        cls, statement: str, cursor: Any
     ) -> Dict[str, Any]:
         """
         Run a SQL query that estimates the cost of a given statement.
@@ -455,14 +496,7 @@ class PrestoEngineSpec(BaseEngineSpec):
         :param username: Effective username
         :return: JSON response from Presto
         """
-        parsed_query = ParsedQuery(statement)
-        sql = parsed_query.stripped()
-
-        sql_query_mutator = config["SQL_QUERY_MUTATOR"]
-        if sql_query_mutator:
-            sql = sql_query_mutator(sql, user_name, security_manager, database)
-
-        sql = f"EXPLAIN (TYPE IO, FORMAT JSON) {sql}"
+        sql = f"EXPLAIN (TYPE IO, FORMAT JSON) {statement}"
         cursor.execute(sql)
 
         # the output from Presto is a single column and a single row containing
@@ -526,7 +560,9 @@ class PrestoEngineSpec(BaseEngineSpec):
         return cost
 
     @classmethod
-    def adjust_database_uri(cls, uri, selected_schema=None):
+    def adjust_database_uri(
+        cls, uri: URL, selected_schema: Optional[str] = None
+    ) -> None:
         database = uri.database
         if selected_schema and database:
             selected_schema = parse.quote(selected_schema, safe="")
@@ -535,14 +571,13 @@ class PrestoEngineSpec(BaseEngineSpec):
             else:
                 database += "/" + selected_schema
             uri.database = database
-        return uri
 
     @classmethod
     def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
-        if tt == "DATE":
+        if tt == utils.TemporalType.DATE:
             return f"""from_iso8601_date('{dttm.date().isoformat()}')"""
-        if tt == "TIMESTAMP":
+        if tt == utils.TemporalType.TIMESTAMP:
             return f"""from_iso8601_timestamp('{dttm.isoformat(timespec="microseconds")}')"""  # pylint: disable=line-too-long
         return None
 
@@ -552,7 +587,7 @@ class PrestoEngineSpec(BaseEngineSpec):
 
     @classmethod
     def get_all_datasource_names(
-        cls, database, datasource_type: str
+        cls, database: "Database", datasource_type: str
     ) -> List[utils.DatasourceName]:
         datasource_df = database.get_df(
             "SELECT table_schema, table_name FROM INFORMATION_SCHEMA.{}S "
@@ -571,9 +606,9 @@ class PrestoEngineSpec(BaseEngineSpec):
         return datasource_names
 
     @classmethod
-    def expand_data(  # pylint: disable=too-many-locals
-        cls, columns: List[dict], data: List[dict]
-    ) -> Tuple[List[dict], List[dict], List[dict]]:
+    def expand_data(  # pylint: disable=too-many-locals,too-many-branches
+        cls, columns: List[Dict[Any, Any]], data: List[Dict[Any, Any]]
+    ) -> Tuple[List[Dict[Any, Any]], List[Dict[Any, Any]], List[Dict[Any, Any]]]:
         """
         We do not immediately display rows and arrays clearly in the data grid. This
         method separates out nested fields and data values to help clearly display
@@ -601,7 +636,7 @@ class PrestoEngineSpec(BaseEngineSpec):
         # process each column, unnesting ARRAY types and
         # expanding ROW types into new columns
         to_process = deque((column, 0) for column in columns)
-        all_columns: List[dict] = []
+        all_columns: List[Dict[str, Any]] = []
         expanded_columns = []
         current_array_level = None
         while to_process:
@@ -619,6 +654,7 @@ class PrestoEngineSpec(BaseEngineSpec):
                 current_array_level = level
 
             name = column["name"]
+            values: Optional[Union[str, List[Any]]]
 
             if column["type"].startswith("ARRAY("):
                 # keep processing array children; we append to the right so that
@@ -630,6 +666,8 @@ class PrestoEngineSpec(BaseEngineSpec):
                 while i < len(data):
                     row = data[i]
                     values = row.get(name)
+                    if isinstance(values, str):
+                        row[name] = values = destringify(values)
                     if values:
                         # how many extra rows we need to unnest the data?
                         extra_rows = len(values) - 1
@@ -656,12 +694,15 @@ class PrestoEngineSpec(BaseEngineSpec):
                 # expand columns; we append them to the left so they are added
                 # immediately after the parent
                 expanded = get_children(column)
-                to_process.extendleft((column, level) for column in expanded)
+                to_process.extendleft((column, level) for column in expanded[::-1])
                 expanded_columns.extend(expanded)
 
                 # expand row objects into new columns
                 for row in data:
-                    for value, col in zip(row.get(name) or [], expanded):
+                    values = row.get(name) or []
+                    if isinstance(values, str):
+                        row[name] = values = cast(List[Any], destringify(values))
+                    for value, col in zip(values, expanded):
                         row[col["name"]] = value
 
         data = [
@@ -672,7 +713,7 @@ class PrestoEngineSpec(BaseEngineSpec):
 
     @classmethod
     def extra_table_metadata(
-        cls, database, table_name: str, schema_name: str
+        cls, database: "Database", table_name: str, schema_name: str
     ) -> Dict[str, Any]:
         metadata = {}
 
@@ -686,7 +727,9 @@ class PrestoEngineSpec(BaseEngineSpec):
             col_names, latest_parts = cls.latest_partition(
                 table_name, schema_name, database, show_first=True
             )
-            latest_parts = latest_parts or tuple([None] * len(col_names))
+
+            if not latest_parts:
+                latest_parts = tuple([None] * len(col_names))
             metadata["partitions"] = {
                 "cols": cols,
                 "latest": dict(zip(col_names, latest_parts)),
@@ -701,7 +744,9 @@ class PrestoEngineSpec(BaseEngineSpec):
         return metadata
 
     @classmethod
-    def get_create_view(cls, database, schema: str, table: str) -> Optional[str]:
+    def get_create_view(
+        cls, database: "Database", schema: str, table: str
+    ) -> Optional[str]:
         """
         Return a CREATE VIEW statement, or `None` if not a view.
 
@@ -728,10 +773,13 @@ class PrestoEngineSpec(BaseEngineSpec):
         return rows[0][0]
 
     @classmethod
-    def handle_cursor(cls, cursor, query, session):
+    def handle_cursor(cls, cursor: Any, query: Query, session: Session) -> None:
         """Updates progress information"""
         query_id = query.id
-        logging.info(f"Query {query_id}: Polling the cursor for progress")
+        poll_interval = query.database.connect_args.get(
+            "poll_interval", config["PRESTO_POLL_INTERVAL"]
+        )
+        logger.info("Query %i: Polling the cursor for progress", query_id)
         polled = cursor.poll()
         # poll returns dict -- JSON status information or ``None``
         # if the query is done
@@ -757,39 +805,44 @@ class PrestoEngineSpec(BaseEngineSpec):
                 total_splits = float(stats.get("totalSplits"))
                 if total_splits and completed_splits:
                     progress = 100 * (completed_splits / total_splits)
-                    logging.info(
+                    logger.info(
                         "Query {} progress: {} / {} "  # pylint: disable=logging-format-interpolation
                         "splits".format(query_id, completed_splits, total_splits)
                     )
                     if progress > query.progress:
                         query.progress = progress
                     session.commit()
-            time.sleep(1)
-            logging.info(f"Query {query_id}: Polling the cursor for progress")
+            time.sleep(poll_interval)
+            logger.info("Query %i: Polling the cursor for progress", query_id)
             polled = cursor.poll()
 
     @classmethod
-    def _extract_error_message(cls, e):
+    def _extract_error_message(cls, ex: Exception) -> str:
         if (
-            hasattr(e, "orig")
-            and type(e.orig).__name__ == "DatabaseError"
-            and isinstance(e.orig[0], dict)
+            hasattr(ex, "orig")
+            and type(ex.orig).__name__ == "DatabaseError"  # type: ignore
+            and isinstance(ex.orig[0], dict)  # type: ignore
         ):
-            error_dict = e.orig[0]
+            error_dict = ex.orig[0]  # type: ignore
             return "{} at {}: {}".format(
                 error_dict.get("errorName"),
                 error_dict.get("errorLocation"),
                 error_dict.get("message"),
             )
-        if type(e).__name__ == "DatabaseError" and hasattr(e, "args") and e.args:
-            error_dict = e.args[0]
-            return error_dict.get("message")
-        return utils.error_msg_from_exception(e)
+        if type(ex).__name__ == "DatabaseError" and hasattr(ex, "args") and ex.args:
+            error_dict = ex.args[0]
+            return error_dict.get("message", _("Unknown Presto Error"))
+        return utils.error_msg_from_exception(ex)
 
     @classmethod
     def _partition_query(  # pylint: disable=too-many-arguments,too-many-locals
-        cls, table_name, database, limit=0, order_by=None, filters=None
-    ):
+        cls,
+        table_name: str,
+        database: "Database",
+        limit: int = 0,
+        order_by: Optional[List[Tuple[str, bool]]] = None,
+        filters: Optional[Dict[Any, Any]] = None,
+    ) -> str:
         """Returns a partition query
 
         :param table_name: the name of the table to get partitions from
@@ -843,9 +896,9 @@ class PrestoEngineSpec(BaseEngineSpec):
         cls,
         table_name: str,
         schema: Optional[str],
-        database,
+        database: "Database",
         query: Select,
-        columns: Optional[List] = None,
+        columns: Optional[List[Dict[str, str]]] = None,
     ) -> Optional[Select]:
         try:
             col_names, values = cls.latest_partition(
@@ -865,17 +918,20 @@ class PrestoEngineSpec(BaseEngineSpec):
         return query
 
     @classmethod
-    def _latest_partition_from_df(  # pylint: disable=invalid-name
-        cls, df
-    ) -> Optional[List[str]]:
+    def _latest_partition_from_df(cls, df: pd.DataFrame) -> Optional[List[str]]:
         if not df.empty:
             return df.to_records(index=False)[0].item()
         return None
 
     @classmethod
+    @cache_manager.data_cache.memoize(timeout=60)
     def latest_partition(
-        cls, table_name: str, schema: Optional[str], database, show_first: bool = False
-    ):
+        cls,
+        table_name: str,
+        schema: Optional[str],
+        database: "Database",
+        show_first: bool = False,
+    ) -> Tuple[List[str], Optional[List[str]]]:
         """Returns col name and the latest (max) partition value for a table
 
         :param table_name: the name of the table
@@ -900,12 +956,14 @@ class PrestoEngineSpec(BaseEngineSpec):
             raise SupersetTemplateException(
                 "The table should have one partitioned field"
             )
-        elif not show_first and len(indexes[0]["column_names"]) > 1:
+
+        if not show_first and len(indexes[0]["column_names"]) > 1:
             raise SupersetTemplateException(
                 "The table should have a single partitioned field "
                 "to use this function. You may want to use "
                 "`presto.latest_sub_partition`"
             )
+
         column_names = indexes[0]["column_names"]
         part_fields = [(column_name, True) for column_name in column_names]
         sql = cls._partition_query(table_name, database, 1, part_fields)
@@ -913,7 +971,9 @@ class PrestoEngineSpec(BaseEngineSpec):
         return column_names, cls._latest_partition_from_df(df)
 
     @classmethod
-    def latest_sub_partition(cls, table_name, schema, database, **kwargs):
+    def latest_sub_partition(
+        cls, table_name: str, schema: Optional[str], database: "Database", **kwargs: Any
+    ) -> Any:
         """Returns the latest (max) partition value for a table
 
         A filtering criteria should be passed for all fields that are
@@ -942,7 +1002,7 @@ class PrestoEngineSpec(BaseEngineSpec):
         indexes = database.get_indexes(table_name, schema)
         part_fields = indexes[0]["column_names"]
         for k in kwargs.keys():  # pylint: disable=consider-iterating-dictionary
-            if k not in k in part_fields:
+            if k not in k in part_fields:  # pylint: disable=comparison-with-itself
                 msg = "Field [{k}] is not part of the portioning key"
                 raise SupersetTemplateException(msg)
         if len(kwargs.keys()) != len(part_fields) - 1:
@@ -964,7 +1024,68 @@ class PrestoEngineSpec(BaseEngineSpec):
         return df.to_dict()[field_to_return][0]
 
     @classmethod
-    def get_pandas_dtype(cls, cursor_description: List[tuple]) -> Dict[str, str]:
-        return {
-            col[0]: pandas_dtype_map.get(col[1], "object") for col in cursor_description
-        }
+    @cache_manager.data_cache.memoize()
+    def get_function_names(cls, database: "Database") -> List[str]:
+        """
+        Get a list of function names that are able to be called on the database.
+        Used for SQL Lab autocomplete.
+
+        :param database: The database to get functions for
+        :return: A list of function names useable in the database
+        """
+        return database.get_df("SHOW FUNCTIONS")["Function"].tolist()
+
+    @classmethod
+    def extract_errors(cls, ex: Exception) -> List[Dict[str, Any]]:
+        raw_message = cls._extract_error_message(ex)
+
+        column_match = re.search(COLUMN_NOT_RESOLVED_ERROR_REGEX, raw_message)
+        if column_match:
+            return [
+                dataclasses.asdict(
+                    SupersetError(
+                        error_type=SupersetErrorType.COLUMN_DOES_NOT_EXIST_ERROR,
+                        message=__(
+                            'We can\'t seem to resolve the column "%(column_name)s" at '
+                            "line %(location)s.",
+                            column_name=column_match.group(2),
+                            location=column_match.group(1),
+                        ),
+                        level=ErrorLevel.ERROR,
+                        extra={"engine_name": cls.engine_name},
+                    )
+                )
+            ]
+
+        table_match = re.search(TABLE_DOES_NOT_EXIST_ERROR_REGEX, raw_message)
+        if table_match:
+            return [
+                dataclasses.asdict(
+                    SupersetError(
+                        error_type=SupersetErrorType.TABLE_DOES_NOT_EXIST_ERROR,
+                        message=__(
+                            'The table "%(table_name)s" does not exist. '
+                            "A valid table must be used to run this query.",
+                            table_name=table_match.group(1),
+                        ),
+                        level=ErrorLevel.ERROR,
+                        extra={"engine_name": cls.engine_name},
+                    )
+                )
+            ]
+
+        return [
+            dataclasses.asdict(
+                SupersetError(
+                    error_type=SupersetErrorType.GENERIC_DB_ENGINE_ERROR,
+                    message=cls._extract_error_message(ex),
+                    level=ErrorLevel.ERROR,
+                    extra={"engine_name": cls.engine_name},
+                )
+            )
+        ]
+
+    @classmethod
+    def is_readonly_query(cls, parsed_query: ParsedQuery) -> bool:
+        """Pessimistic readonly, 100% sure statement won't mutate anything"""
+        return super().is_readonly_query(parsed_query) or parsed_query.is_show()

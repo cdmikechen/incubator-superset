@@ -20,12 +20,16 @@ import json
 import unittest
 from unittest import mock
 
+import pytest
+
+from tests.fixtures.energy_dashboard import load_energy_table_with_slice
 from tests.test_app import app  # isort:skip
 from superset import db, security_manager
 from superset.connectors.connector_registry import ConnectorRegistry
 from superset.connectors.druid.models import DruidDatasource
 from superset.connectors.sqla.models import SqlaTable
 from superset.models import core as models
+from superset.models.datasource_access_request import DatasourceAccessRequest
 
 from .base_tests import SupersetTestCase
 
@@ -83,7 +87,7 @@ def create_access_request(session, ds_type, ds_name, role_name, user_name):
     security_manager.add_permission_role(
         security_manager.find_role(role_name), ds_perm_view
     )
-    access_request = models.DatasourceAccessRequest(
+    access_request = DatasourceAccessRequest(
         datasource_id=ds.id,
         datasource_type=ds_type,
         created_by_fk=security_manager.find_user(username=user_name).id,
@@ -93,10 +97,12 @@ def create_access_request(session, ds_type, ds_name, role_name, user_name):
     return access_request
 
 
-class RequestAccessTests(SupersetTestCase):
+class TestRequestAccess(SupersetTestCase):
     @classmethod
     def setUpClass(cls):
         with app.app_context():
+            cls.create_druid_test_objects()
+
             security_manager.add_role("override_me")
             security_manager.add_role(TEST_ROLE_1)
             security_manager.add_role(TEST_ROLE_2)
@@ -181,6 +187,7 @@ class RequestAccessTests(SupersetTestCase):
         )
         self.assertEqual(3, len(perms))
 
+    @pytest.mark.usefixtures("load_energy_table_with_slice")
     def test_override_role_permissions_drops_absent_perms(self):
         override_me = security_manager.find_role("override_me")
         override_me.permissions.append(
@@ -269,6 +276,7 @@ class RequestAccessTests(SupersetTestCase):
         gamma_user.roles.remove(security_manager.find_role("Alpha"))
         session.commit()
 
+    @pytest.mark.usefixtures("load_energy_table_with_slice")
     def test_clean_requests_after_db_grant(self):
         session = db.session
 
@@ -356,7 +364,7 @@ class RequestAccessTests(SupersetTestCase):
 
         session.commit()
 
-    @mock.patch("superset.utils.core.send_MIME_email")
+    @mock.patch("superset.utils.core.send_mime_email")
     def test_approve(self, mock_send_mime):
         if app.config["ENABLE_ACCESS_REQUEST"]:
             session = db.session
@@ -384,7 +392,7 @@ class RequestAccessTests(SupersetTestCase):
             )
             self.assertEqual(
                 "[Superset] Access to the datasource {} was granted".format(
-                    self.get_table(ds_1_id).full_name
+                    self.get_table_by_id(ds_1_id).full_name
                 ),
                 call_args[2]["Subject"],
             )
@@ -425,7 +433,7 @@ class RequestAccessTests(SupersetTestCase):
             )
             self.assertEqual(
                 "[Superset] Access to the datasource {} was granted".format(
-                    self.get_table(ds_2_id).full_name
+                    self.get_table_by_id(ds_2_id).full_name
                 ),
                 call_args[2]["Subject"],
             )
@@ -566,10 +574,7 @@ class RequestAccessTests(SupersetTestCase):
             self.get_resp(ACCESS_REQUEST.format("druid", druid_ds_4_id, "go"))
             access_request4 = self.get_access_requests("gamma", "druid", druid_ds_4_id)
 
-            self.assertEqual(
-                access_request4.roles_with_datasource,
-                "<ul></ul>".format(access_request4.id),
-            )
+            self.assertEqual(access_request4.roles_with_datasource, "<ul></ul>")
 
             # Case 5. Roles exist that contains the druid datasource.
             # add druid ds to the existing roles

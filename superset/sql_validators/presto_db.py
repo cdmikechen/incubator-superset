@@ -23,13 +23,15 @@ from typing import Any, Dict, List, Optional
 from flask import g
 
 from superset import app, security_manager
+from superset.models.core import Database
 from superset.sql_parse import ParsedQuery
 from superset.sql_validators.base import BaseSQLValidator, SQLValidationAnnotation
-from superset.utils.core import sources
+from superset.utils.core import QuerySource
 
 MAX_ERROR_ROWS = 10
 
 config = app.config
+logger = logging.getLogger(__name__)
 
 
 class PrestoSQLValidationError(Exception):
@@ -43,7 +45,7 @@ class PrestoDBSQLValidator(BaseSQLValidator):
 
     @classmethod
     def validate_statement(
-        cls, statement, database, cursor, user_name
+        cls, statement: str, database: Database, cursor: Any, user_name: str
     ) -> Optional[SQLValidationAnnotation]:
         # pylint: disable=too-many-locals
         db_engine_spec = database.db_engine_spec
@@ -51,10 +53,9 @@ class PrestoDBSQLValidator(BaseSQLValidator):
         sql = parsed_query.stripped()
 
         # Hook to allow environment-specific mutation (usually comments) to the SQL
-        # pylint: disable=invalid-name
-        SQL_QUERY_MUTATOR = config["SQL_QUERY_MUTATOR"]
-        if SQL_QUERY_MUTATOR:
-            sql = SQL_QUERY_MUTATOR(sql, user_name, security_manager, database)
+        sql_query_mutator = config["SQL_QUERY_MUTATOR"]
+        if sql_query_mutator:
+            sql = sql_query_mutator(sql, user_name, security_manager, database)
 
         # Transform the final statement to an explain call before sending it on
         # to presto to validate
@@ -70,7 +71,7 @@ class PrestoDBSQLValidator(BaseSQLValidator):
             db_engine_spec.execute(cursor, sql)
             polled = cursor.poll()
             while polled:
-                logging.info("polling presto for validation progress")
+                logger.info("polling presto for validation progress")
                 stats = polled.get("stats", {})
                 if stats:
                     state = stats.get("state")
@@ -135,13 +136,13 @@ class PrestoDBSQLValidator(BaseSQLValidator):
                 start_column=start_column,
                 end_column=end_column,
             )
-        except Exception as e:
-            logging.exception(f"Unexpected error running validation query: {e}")
-            raise e
+        except Exception as ex:
+            logger.exception("Unexpected error running validation query: %s", str(ex))
+            raise ex
 
     @classmethod
     def validate(
-        cls, sql: str, schema: str, database: Any
+        cls, sql: str, schema: Optional[str], database: Database
     ) -> List[SQLValidationAnnotation]:
         """
         Presto supports query-validation queries by running them with a
@@ -154,12 +155,12 @@ class PrestoDBSQLValidator(BaseSQLValidator):
         parsed_query = ParsedQuery(sql)
         statements = parsed_query.get_statements()
 
-        logging.info(f"Validating {len(statements)} statement(s)")
+        logger.info("Validating %i statement(s)", len(statements))
         engine = database.get_sqla_engine(
             schema=schema,
             nullpool=True,
             user_name=user_name,
-            source=sources.get("sql_lab", None),
+            source=QuerySource.SQL_LAB,
         )
         # Sharing a single connection and cursor across the
         # execution of all statements (if many)
@@ -172,6 +173,6 @@ class PrestoDBSQLValidator(BaseSQLValidator):
                     )
                     if annotation:
                         annotations.append(annotation)
-        logging.debug(f"Validation found {len(annotations)} error(s)")
+        logger.debug("Validation found %i error(s)", len(annotations))
 
         return annotations

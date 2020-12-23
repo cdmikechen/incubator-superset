@@ -14,16 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# isort:skip_file
 """Unit tests for Superset"""
 import json
 import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from superset import db, security_manager
 from tests.test_app import app
 
+from superset import db, security_manager
+
 from .base_tests import SupersetTestCase
+
 
 try:
     from superset.connectors.druid.models import (
@@ -87,19 +90,19 @@ GB_RESULT_SET = [
     {
         "version": "v1",
         "timestamp": "2012-01-01T00:00:00.000Z",
-        "event": {"dim1": "Canada", "dim2": "boy", "metric1": 12345678},
+        "event": {"dim1": "Canada", "dim2": "boy", "count": 12345678},
     },
     {
         "version": "v1",
         "timestamp": "2012-01-01T00:00:00.000Z",
-        "event": {"dim1": "USA", "dim2": "girl", "metric1": 12345678 / 2},
+        "event": {"dim1": "USA", "dim2": "girl", "count": 12345678 / 2},
     },
 ]
 
 DruidCluster.get_druid_version = lambda _: "0.9.1"  # type: ignore
 
 
-class DruidTests(SupersetTestCase):
+class TestDruid(SupersetTestCase):
 
     """Testing interactions with Druid"""
 
@@ -128,9 +131,7 @@ class DruidTests(SupersetTestCase):
         )
         if cluster:
             for datasource in (
-                db.session.query(DruidDatasource)
-                .filter_by(cluster_name=cluster.cluster_name)
-                .all()
+                db.session.query(DruidDatasource).filter_by(cluster_id=cluster.id).all()
             ):
                 db.session.delete(datasource)
 
@@ -355,9 +356,7 @@ class DruidTests(SupersetTestCase):
         )
         if cluster:
             for datasource in (
-                db.session.query(DruidDatasource)
-                .filter_by(cluster_name=cluster.cluster_name)
-                .all()
+                db.session.query(DruidDatasource).filter_by(cluster_id=cluster.id).all()
             ):
                 db.session.delete(datasource)
 

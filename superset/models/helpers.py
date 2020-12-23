@@ -18,36 +18,61 @@
 import json
 import logging
 import re
-from datetime import datetime
-from typing import List, Optional
+import uuid
+from datetime import datetime, timedelta
+from json.decoder import JSONDecodeError
+from typing import Any, Dict, List, Optional, Set, Union
 
-# isort and pylint disagree, isort should win
-# pylint: disable=ungrouped-imports
 import humanize
+import pandas as pd
+import pytz
 import sqlalchemy as sa
 import yaml
 from flask import escape, g, Markup
 from flask_appbuilder.models.decorators import renders
 from flask_appbuilder.models.mixins import AuditMixin
+from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import and_, or_, UniqueConstraint
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import Mapper, Session
 from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy_utils import UUIDType
 
 from superset.utils.core import QueryStatus
 
+logger = logging.getLogger(__name__)
 
-def json_to_dict(json_str):
+
+def json_to_dict(json_str: str) -> Dict[Any, Any]:
     if json_str:
         val = re.sub(",[ \t\r\n]+}", "}", json_str)
-        val = re.sub(
-            ",[ \t\r\n]+\]", "]", val  # pylint: disable=anomalous-backslash-in-string
-        )
+        val = re.sub(",[ \t\r\n]+\\]", "]", val)
         return json.loads(val)
 
     return {}
 
 
-class ImportMixin(object):
+def convert_uuids(obj: Any) -> Any:
+    """
+    Convert UUID objects to str so we can use yaml.safe_dump
+    """
+    if isinstance(obj, uuid.UUID):
+        return str(obj)
+
+    if isinstance(obj, list):
+        return [convert_uuids(el) for el in obj]
+
+    if isinstance(obj, dict):
+        return {k: convert_uuids(v) for k, v in obj.items()}
+
+    return obj
+
+
+class ImportExportMixin:
+    uuid = sa.Column(
+        UUIDType(binary=True), primary_key=False, unique=True, default=uuid.uuid4
+    )
+
     export_parent: Optional[str] = None
     # The name of the attribute
     # with the SQL Alchemy back reference
@@ -60,8 +85,27 @@ class ImportMixin(object):
     # The names of the attributes
     # that are available for import and export
 
+    extra_import_fields: List[str] = []
+    # Additional fields that should be imported,
+    # even though they were not exported
+
+    __mapper__: Mapper
+
     @classmethod
-    def _parent_foreign_key_mappings(cls):
+    def _unique_constrains(cls) -> List[Set[str]]:
+        """Get all (single column and multi column) unique constraints"""
+        unique = [
+            {c.name for c in u.columns}
+            for u in cls.__table_args__  # type: ignore
+            if isinstance(u, UniqueConstraint)
+        ]
+        unique.extend(
+            {c.name} for c in cls.__table__.columns if c.unique  # type: ignore
+        )
+        return unique
+
+    @classmethod
+    def parent_foreign_key_mappings(cls) -> Dict[str, str]:
         """Get a mapping of foreign name to the local name of foreign keys"""
         parent_rel = cls.__mapper__.relationships.get(cls.export_parent)
         if parent_rel:
@@ -69,35 +113,26 @@ class ImportMixin(object):
         return {}
 
     @classmethod
-    def _unique_constrains(cls):
-        """Get all (single column and multi column) unique constraints"""
-        unique = [
-            {c.name for c in u.columns}
-            for u in cls.__table_args__
-            if isinstance(u, UniqueConstraint)
-        ]
-        unique.extend({c.name} for c in cls.__table__.columns if c.unique)
-        return unique
-
-    @classmethod
-    def export_schema(cls, recursive=True, include_parent_ref=False):
+    def export_schema(
+        cls, recursive: bool = True, include_parent_ref: bool = False
+    ) -> Dict[str, Any]:
         """Export schema as a dictionary"""
-        parent_excludes = {}
+        parent_excludes = set()
         if not include_parent_ref:
             parent_ref = cls.__mapper__.relationships.get(cls.export_parent)
             if parent_ref:
                 parent_excludes = {column.name for column in parent_ref.local_columns}
 
-        def formatter(column):
+        def formatter(column: sa.Column) -> str:
             return (
                 "{0} Default ({1})".format(str(column.type), column.default.arg)
                 if column.default
                 else str(column.type)
             )
 
-        schema = {
+        schema: Dict[str, Any] = {
             column.name: formatter(column)
-            for column in cls.__table__.columns
+            for column in cls.__table__.columns  # type: ignore
             if (column.name in cls.export_fields and column.name not in parent_excludes)
         }
         if recursive:
@@ -112,23 +147,32 @@ class ImportMixin(object):
 
     @classmethod
     def import_from_dict(
-        cls, session, dict_rep, parent=None, recursive=True, sync=None
-    ):  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
+        # pylint: disable=too-many-arguments,too-many-branches,too-many-locals
+        cls,
+        session: Session,
+        dict_rep: Dict[Any, Any],
+        parent: Optional[Any] = None,
+        recursive: bool = True,
+        sync: Optional[List[str]] = None,
+    ) -> Any:
         """Import obj from a dictionary"""
         if sync is None:
             sync = []
-        parent_refs = cls._parent_foreign_key_mappings()
-        export_fields = set(cls.export_fields) | set(parent_refs.keys())
-        new_children = {
-            c: dict_rep.get(c) for c in cls.export_children if c in dict_rep
-        }
+        parent_refs = cls.parent_foreign_key_mappings()
+        export_fields = (
+            set(cls.export_fields)
+            | set(cls.extra_import_fields)
+            | set(parent_refs.keys())
+            | {"uuid"}
+        )
+        new_children = {c: dict_rep[c] for c in cls.export_children if c in dict_rep}
         unique_constrains = cls._unique_constrains()
 
         filters = []  # Using these filters to check if obj already exists
 
         # Remove fields that should not get imported
         for k in list(dict_rep):
-            if k not in export_fields:
+            if k not in export_fields and k not in parent_refs:
                 del dict_rep[k]
 
         if not parent:
@@ -163,26 +207,26 @@ class ImportMixin(object):
         try:
             obj_query = session.query(cls).filter(and_(*filters))
             obj = obj_query.one_or_none()
-        except MultipleResultsFound as e:
-            logging.error(
+        except MultipleResultsFound as ex:
+            logger.error(
                 "Error importing %s \n %s \n %s",
                 cls.__name__,
                 str(obj_query),
                 yaml.safe_dump(dict_rep),
             )
-            raise e
+            raise ex
 
         if not obj:
             is_new_obj = True
             # Create new DB object
-            obj = cls(**dict_rep)
-            logging.info("Importing new %s %s", obj.__tablename__, str(obj))
+            obj = cls(**dict_rep)  # type: ignore
+            logger.info("Importing new %s %s", obj.__tablename__, str(obj))
             if cls.export_parent and parent:
                 setattr(obj, cls.export_parent, parent)
             session.add(obj)
         else:
             is_new_obj = False
-            logging.info("Updating %s %s", obj.__tablename__, str(obj))
+            logger.info("Updating %s %s", obj.__tablename__, str(obj))
             # Update columns
             for k, v in dict_rep.items():
                 setattr(obj, k, v)
@@ -201,9 +245,7 @@ class ImportMixin(object):
                 # If children should get synced, delete the ones that did not
                 # get updated.
                 if child in sync and not is_new_obj:
-                    back_refs = (
-                        child_class._parent_foreign_key_mappings()  # pylint: disable=protected-access
-                    )
+                    back_refs = child_class.parent_foreign_key_mappings()
                     delete_filters = [
                         getattr(child_class, k) == getattr(obj, back_refs.get(k))
                         for k in back_refs.keys()
@@ -212,26 +254,36 @@ class ImportMixin(object):
                         session.query(child_class).filter(and_(*delete_filters))
                     ).difference(set(added))
                     for o in to_delete:
-                        logging.info("Deleting %s %s", child, str(obj))
+                        logger.info("Deleting %s %s", child, str(obj))
                         session.delete(o)
 
         return obj
 
     def export_to_dict(
-        self, recursive=True, include_parent_ref=False, include_defaults=False
-    ):
+        self,
+        recursive: bool = True,
+        include_parent_ref: bool = False,
+        include_defaults: bool = False,
+        export_uuids: bool = False,
+    ) -> Dict[Any, Any]:
         """Export obj to dictionary"""
+        export_fields = set(self.export_fields)
+        if export_uuids:
+            export_fields.add("uuid")
+            if "id" in export_fields:
+                export_fields.remove("id")
+
         cls = self.__class__
-        parent_excludes = {}
+        parent_excludes = set()
         if recursive and not include_parent_ref:
             parent_ref = cls.__mapper__.relationships.get(cls.export_parent)
             if parent_ref:
                 parent_excludes = {c.name for c in parent_ref.local_columns}
         dict_rep = {
             c.name: getattr(self, c.name)
-            for c in cls.__table__.columns
+            for c in cls.__table__.columns  # type: ignore
             if (
-                c.name in self.export_fields
+                c.name in export_fields
                 and c.name not in parent_excludes
                 and (
                     include_defaults
@@ -242,6 +294,13 @@ class ImportMixin(object):
                 )
             )
         }
+
+        # sort according to export_fields using DSU (decorate, sort, undecorate)
+        order = {field: i for i, field in enumerate(self.export_fields)}
+        decorated_keys = [(order.get(k, len(order)), k) for k in dict_rep]
+        decorated_keys.sort()
+        dict_rep = {k: dict_rep[k] for _, k in decorated_keys}
+
         if recursive:
             for cld in self.export_children:
                 # sorting to make lists of children stable
@@ -257,47 +316,50 @@ class ImportMixin(object):
                     key=lambda k: sorted(str(k.items())),
                 )
 
-        return dict_rep
+        return convert_uuids(dict_rep)
 
-    def override(self, obj):
+    def override(self, obj: Any) -> None:
         """Overrides the plain fields of the dashboard."""
         for field in obj.__class__.export_fields:
             setattr(self, field, getattr(obj, field))
 
-    def copy(self):
+    def copy(self) -> Any:
         """Creates a copy of the dashboard without relationships."""
         new_obj = self.__class__()
         new_obj.override(self)
         return new_obj
 
-    def alter_params(self, **kwargs):
-        d = self.params_dict
-        d.update(kwargs)
-        self.params = json.dumps(d)
+    def alter_params(self, **kwargs: Any) -> None:
+        params = self.params_dict
+        params.update(kwargs)
+        self.params = json.dumps(params)
 
-    def reset_ownership(self):
+    def remove_params(self, param_to_remove: str) -> None:
+        params = self.params_dict
+        params.pop(param_to_remove, None)
+        self.params = json.dumps(params)
+
+    def reset_ownership(self) -> None:
         """ object will belong to the user the current user """
         # make sure the object doesn't have relations to a user
         # it will be filled by appbuilder on save
         self.created_by = None
         self.changed_by = None
         # flask global context might not exist (in cli or tests for example)
-        try:
-            if g.user:
-                self.owners = [g.user]
-        except Exception:  # pylint: disable=broad-except
-            self.owners = []
+        self.owners = []
+        if g and hasattr(g, "user"):
+            self.owners = [g.user]
 
     @property
-    def params_dict(self):
+    def params_dict(self) -> Dict[Any, Any]:
         return json_to_dict(self.params)
 
     @property
-    def template_params_dict(self):
-        return json_to_dict(self.template_params)
+    def template_params_dict(self) -> Dict[Any, Any]:
+        return json_to_dict(self.template_params)  # type: ignore
 
 
-def _user_link(user):  # pylint: disable=no-self-use
+def _user_link(user: User) -> Union[Markup, str]:
     if not user:
         return ""
     url = "/superset/profile/{}/".format(user.username)
@@ -305,7 +367,6 @@ def _user_link(user):  # pylint: disable=no-self-use
 
 
 class AuditMixinNullable(AuditMixin):
-
     """Altering the AuditMixin to use nullable fields
 
     Allows creating objects programmatically outside of CRUD
@@ -317,7 +378,7 @@ class AuditMixinNullable(AuditMixin):
     )
 
     @declared_attr
-    def created_by_fk(self):
+    def created_by_fk(self) -> sa.Column:
         return sa.Column(
             sa.Integer,
             sa.ForeignKey("ab_user.id"),
@@ -326,7 +387,7 @@ class AuditMixinNullable(AuditMixin):
         )
 
     @declared_attr
-    def changed_by_fk(self):
+    def changed_by_fk(self) -> sa.Column:
         return sa.Column(
             sa.Integer,
             sa.ForeignKey("ab_user.id"),
@@ -335,44 +396,61 @@ class AuditMixinNullable(AuditMixin):
             nullable=True,
         )
 
-    def changed_by_name(self):
-        if self.created_by:
-            return escape("{}".format(self.created_by))
+    @property
+    def changed_by_name(self) -> str:
+        if self.changed_by:
+            return escape("{}".format(self.changed_by))
         return ""
 
     @renders("created_by")
-    def creator(self):
+    def creator(self) -> Union[Markup, str]:
         return _user_link(self.created_by)
 
     @property
-    def changed_by_(self):
+    def changed_by_(self) -> Union[Markup, str]:
         return _user_link(self.changed_by)
 
     @renders("changed_on")
-    def changed_on_(self):
+    def changed_on_(self) -> Markup:
         return Markup(f'<span class="no-wrap">{self.changed_on}</span>')
 
+    @renders("changed_on")
+    def changed_on_delta_humanized(self) -> str:
+        return self.changed_on_humanized
+
+    @renders("changed_on")
+    def changed_on_utc(self) -> str:
+        # Convert naive datetime to UTC
+        return self.changed_on.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%z")
+
     @property
-    def changed_on_humanized(self):
+    def changed_on_humanized(self) -> str:
         return humanize.naturaltime(datetime.now() - self.changed_on)
 
     @renders("changed_on")
-    def modified(self):
+    def modified(self) -> Markup:
         return Markup(f'<span class="no-wrap">{self.changed_on_humanized}</span>')
 
 
-class QueryResult(object):  # pylint: disable=too-few-public-methods
+class QueryResult:  # pylint: disable=too-few-public-methods
 
     """Object returned by the query interface"""
 
     def __init__(  # pylint: disable=too-many-arguments
-        self, df, query, duration, status=QueryStatus.SUCCESS, error_message=None
-    ):
-        self.df = df  # pylint: disable=invalid-name
+        self,
+        df: pd.DataFrame,
+        query: str,
+        duration: timedelta,
+        status: str = QueryStatus.SUCCESS,
+        error_message: Optional[str] = None,
+        errors: Optional[List[Dict[str, Any]]] = None,
+    ) -> None:
+        self.df = df
         self.query = query
         self.duration = duration
         self.status = status
         self.error_message = error_message
+        self.errors = errors or []
 
 
 class ExtraJSONMixin:
@@ -381,16 +459,19 @@ class ExtraJSONMixin:
     extra_json = sa.Column(sa.Text, default="{}")
 
     @property
-    def extra(self):
+    def extra(self) -> Dict[str, Any]:
         try:
             return json.loads(self.extra_json)
-        except Exception:  # pylint: disable=broad-except
+        except (TypeError, JSONDecodeError) as exc:
+            logger.error(
+                "Unable to load an extra json: %r. Leaving empty.", exc, exc_info=True
+            )
             return {}
 
-    def set_extra_json(self, d):
-        self.extra_json = json.dumps(d)
+    def set_extra_json(self, extras: Dict[str, Any]) -> None:
+        self.extra_json = json.dumps(extras)
 
-    def set_extra_json_key(self, key, value):
+    def set_extra_json_key(self, key: str, value: Any) -> None:
         extra = self.extra
         extra[key] = value
         self.extra_json = json.dumps(extra)

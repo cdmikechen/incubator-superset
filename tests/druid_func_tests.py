@@ -14,10 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# isort:skip_file
 import json
 import unittest
 from unittest.mock import Mock
 
+import tests.test_app
 import superset.connectors.druid.models as models
 from superset.connectors.druid.models import DruidColumn, DruidDatasource, DruidMetric
 from superset.exceptions import SupersetException
@@ -48,7 +50,7 @@ def emplace(metrics_dict, metric_name, is_postagg=False):
 
 
 # Unit tests that can be run without initializing base tests
-class DruidFuncTestCase(SupersetTestCase):
+class TestDruidFunc(SupersetTestCase):
     @unittest.skipUnless(
         SupersetTestCase.is_module_installed("pydruid"), "pydruid not installed"
     )
@@ -413,11 +415,11 @@ class DruidFuncTestCase(SupersetTestCase):
         client.query_builder.last_query.query_dict = {"mock": 0}
         # no groupby calls client.timeseries
         ds.run_query(
-            groupby,
             metrics,
             None,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             client=client,
             filter=[],
             row_limit=100,
@@ -470,11 +472,11 @@ class DruidFuncTestCase(SupersetTestCase):
         client.query_builder.last_query.query_dict = {"mock": 0}
         # no groupby calls client.timeseries
         ds.run_query(
-            groupby,
             metrics,
             None,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             client=client,
             filter=[],
             row_limit=100,
@@ -517,11 +519,11 @@ class DruidFuncTestCase(SupersetTestCase):
         client.query_builder.last_query.query_dict = {"mock": 0}
         # client.topn is called twice
         ds.run_query(
-            groupby,
             metrics,
             None,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             timeseries_limit=100,
             client=client,
             order_desc=True,
@@ -541,11 +543,11 @@ class DruidFuncTestCase(SupersetTestCase):
         client = Mock()
         client.query_builder.last_query.query_dict = {"mock": 0}
         ds.run_query(
-            groupby,
             metrics,
             None,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             client=client,
             order_desc=False,
             filter=[],
@@ -566,11 +568,11 @@ class DruidFuncTestCase(SupersetTestCase):
         client = Mock()
         client.query_builder.last_query.query_dict = {"mock": 0}
         ds.run_query(
-            groupby,
             metrics,
             None,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             client=client,
             order_desc=True,
             timeseries_limit=5,
@@ -617,11 +619,11 @@ class DruidFuncTestCase(SupersetTestCase):
         client.query_builder.last_query.query_dict = {"mock": 0}
         # no groupby calls client.timeseries
         ds.run_query(
-            groupby,
             metrics,
             None,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             client=client,
             row_limit=100,
             filter=[],
@@ -1019,11 +1021,11 @@ class DruidFuncTestCase(SupersetTestCase):
         granularity = "all"
         # get the counts of the top 5 'dim1's, order by 'sum1'
         ds.run_query(
-            groupby,
             metrics,
             granularity,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             timeseries_limit=5,
             timeseries_limit_metric="sum1",
             client=client,
@@ -1040,11 +1042,11 @@ class DruidFuncTestCase(SupersetTestCase):
 
         # get the counts of the top 5 'dim1's, order by 'div1'
         ds.run_query(
-            groupby,
             metrics,
             granularity,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             timeseries_limit=5,
             timeseries_limit_metric="div1",
             client=client,
@@ -1062,11 +1064,11 @@ class DruidFuncTestCase(SupersetTestCase):
         groupby = ["dim1", "dim2"]
         # get the counts of the top 5 ['dim1', 'dim2']s, order by 'sum1'
         ds.run_query(
-            groupby,
             metrics,
             granularity,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             timeseries_limit=5,
             timeseries_limit_metric="sum1",
             client=client,
@@ -1083,11 +1085,11 @@ class DruidFuncTestCase(SupersetTestCase):
 
         # get the counts of the top 5 ['dim1', 'dim2']s, order by 'div1'
         ds.run_query(
-            groupby,
             metrics,
             granularity,
             from_dttm,
             to_dttm,
+            groupby=groupby,
             timeseries_limit=5,
             timeseries_limit_metric="div1",
             client=client,

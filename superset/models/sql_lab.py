@@ -17,12 +17,14 @@
 """A collection of ORM sqlalchemy models for SQL Lab"""
 import re
 from datetime import datetime
+from typing import Any, Dict, List
 
-# pylint: disable=ungrouped-imports
 import simplejson as json
 import sqlalchemy as sqla
 from flask import Markup
 from flask_appbuilder import Model
+from flask_appbuilder.models.decorators import renders
+from humanize import naturaltime
 from sqlalchemy import (
     Boolean,
     Column,
@@ -33,11 +35,17 @@ from sqlalchemy import (
     String,
     Text,
 )
+from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import backref, relationship
 
 from superset import security_manager
-from superset.models.helpers import AuditMixinNullable, ExtraJSONMixin
+from superset.models.helpers import (
+    AuditMixinNullable,
+    ExtraJSONMixin,
+    ImportExportMixin,
+)
 from superset.models.tags import QueryUpdater
+from superset.sql_parse import CtasMethod, ParsedQuery, Table
 from superset.utils.core import QueryStatus, user_label
 
 
@@ -48,13 +56,14 @@ class Query(Model, ExtraJSONMixin):
     table may represent multiple SQL statements executed sequentially"""
 
     __tablename__ = "query"
-    id = Column(Integer, primary_key=True)  # pylint: disable=invalid-name
+    id = Column(Integer, primary_key=True)
     client_id = Column(String(11), unique=True, nullable=False)
 
     database_id = Column(Integer, ForeignKey("dbs.id"), nullable=False)
 
     # Store the tmp table into the DB only if the user asks for it.
     tmp_table_name = Column(String(256))
+    tmp_schema_name = Column(String(256))
     user_id = Column(Integer, ForeignKey("ab_user.id"), nullable=True)
     status = Column(String(16), default=QueryStatus.PENDING)
     tab_name = Column(String(256))
@@ -69,6 +78,7 @@ class Query(Model, ExtraJSONMixin):
     limit = Column(Integer)
     select_as_cta = Column(Boolean)
     select_as_cta_used = Column(Boolean, default=False)
+    ctas_method = Column(String(16), default=CtasMethod.TABLE)
 
     progress = Column(Integer, default=0)  # 1..100
     # # of rows in the result set or rows modified.
@@ -98,7 +108,7 @@ class Query(Model, ExtraJSONMixin):
 
     __table_args__ = (sqla.Index("ti_user_id_changed_on", user_id, changed_on),)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "changedOn": self.changed_on,
             "changed_on": self.changed_on.isoformat(),
@@ -108,6 +118,7 @@ class Query(Model, ExtraJSONMixin):
             "errorMessage": self.error_message,
             "executedSql": self.executed_sql,
             "id": self.client_id,
+            "queryId": self.id,
             "limit": self.limit,
             "progress": self.progress,
             "rows": self.rows,
@@ -119,6 +130,7 @@ class Query(Model, ExtraJSONMixin):
             "startDttm": self.start_time,
             "state": self.status.lower(),
             "tab": self.tab_name,
+            "tempSchema": self.tmp_schema_name,
             "tempTable": self.tmp_table_name,
             "userId": self.user_id,
             "user": user_label(self.user),
@@ -128,7 +140,7 @@ class Query(Model, ExtraJSONMixin):
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name property"""
         ts = datetime.now().isoformat()
         ts = ts.replace("-", "").replace(":", "").split(".")[0]
@@ -137,19 +149,32 @@ class Query(Model, ExtraJSONMixin):
         return f"sqllab_{tab}_{ts}"
 
     @property
-    def database_name(self):
+    def database_name(self) -> str:
         return self.database.name
 
     @property
-    def username(self):
+    def username(self) -> str:
         return self.user.username
 
+    @property
+    def sql_tables(self) -> List[Table]:
+        return list(ParsedQuery(self.sql).tables)
 
-class SavedQuery(Model, AuditMixinNullable, ExtraJSONMixin):
+    def raise_for_access(self) -> None:
+        """
+        Raise an exception if the user cannot access the resource.
+
+        :raises SupersetSecurityException: If the user cannot access the resource
+        """
+
+        security_manager.raise_for_access(query=self)
+
+
+class SavedQuery(Model, AuditMixinNullable, ExtraJSONMixin, ImportExportMixin):
     """ORM model for SQL query"""
 
     __tablename__ = "saved_query"
-    id = Column(Integer, primary_key=True)  # pylint: disable=invalid-name
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("ab_user.id"), nullable=True)
     db_id = Column(Integer, ForeignKey("dbs.id"), nullable=True)
     schema = Column(String(128))
@@ -166,9 +191,22 @@ class SavedQuery(Model, AuditMixinNullable, ExtraJSONMixin):
         foreign_keys=[db_id],
         backref=backref("saved_queries", cascade="all, delete-orphan"),
     )
+    rows = Column(Integer, nullable=True)
+    last_run = Column(DateTime, nullable=True)
+
+    export_parent = "database"
+    export_fields = [
+        "schema",
+        "label",
+        "description",
+        "sql",
+    ]
+
+    def __repr__(self) -> str:
+        return str(self.label)
 
     @property
-    def pop_tab_link(self):
+    def pop_tab_link(self) -> Markup:
         return Markup(
             f"""
             <a href="/superset/sqllab?savedQueryId={self.id}">
@@ -178,15 +216,31 @@ class SavedQuery(Model, AuditMixinNullable, ExtraJSONMixin):
         )
 
     @property
-    def user_email(self):
+    def user_email(self) -> str:
         return self.user.email
 
     @property
-    def sqlalchemy_uri(self):
+    def sqlalchemy_uri(self) -> URL:
         return self.database.sqlalchemy_uri
 
-    def url(self):
+    def url(self) -> str:
         return "/superset/sqllab?savedQueryId={0}".format(self.id)
+
+    @property
+    def sql_tables(self) -> List[Table]:
+        return list(ParsedQuery(self.sql).tables)
+
+    @property
+    def last_run_humanized(self) -> str:
+        return naturaltime(datetime.now() - self.changed_on)
+
+    @property
+    def _last_run_delta_humanized(self) -> str:
+        return naturaltime(datetime.now() - self.changed_on)
+
+    @renders("changed_on")
+    def last_run_delta_humanized(self) -> str:
+        return self._last_run_delta_humanized
 
 
 class TabState(Model, AuditMixinNullable, ExtraJSONMixin):
@@ -194,9 +248,7 @@ class TabState(Model, AuditMixinNullable, ExtraJSONMixin):
     __tablename__ = "tab_state"
 
     # basic info
-    id = Column(  # pylint: disable=invalid-name
-        Integer, primary_key=True, autoincrement=True
-    )
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("ab_user.id"))
     label = Column(String(256))
     active = Column(Boolean, default=False)
@@ -226,7 +278,7 @@ class TabState(Model, AuditMixinNullable, ExtraJSONMixin):
     autorun = Column(Boolean, default=False)
     template_params = Column(Text)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -247,9 +299,7 @@ class TableSchema(Model, AuditMixinNullable, ExtraJSONMixin):
 
     __tablename__ = "table_schema"
 
-    id = Column(  # pylint: disable=invalid-name
-        Integer, primary_key=True, autoincrement=True
-    )
+    id = Column(Integer, primary_key=True, autoincrement=True)
     tab_state_id = Column(Integer, ForeignKey("tab_state.id", ondelete="CASCADE"))
 
     database_id = Column(Integer, ForeignKey("dbs.id"), nullable=False)
@@ -262,7 +312,7 @@ class TableSchema(Model, AuditMixinNullable, ExtraJSONMixin):
 
     expanded = Column(Boolean, default=False)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         try:
             description = json.loads(self.description)
         except json.JSONDecodeError:

@@ -14,17 +14,24 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import datetime
 from unittest import mock
 
-from superset import app
+import pytest
+
 from superset.db_engine_specs import engines
 from superset.db_engine_specs.base import BaseEngineSpec, builtin_time_grains
 from superset.db_engine_specs.sqlite import SqliteEngineSpec
+from superset.sql_parse import ParsedQuery
 from superset.utils.core import get_example_database
-from tests.db_engine_specs.base_tests import DbEngineSpecTestCase
+from tests.db_engine_specs.base_tests import TestDbEngineSpec
+from tests.test_app import app
+
+from ..fixtures.energy_dashboard import load_energy_table_with_slice
+from ..fixtures.pyodbcRow import Row
 
 
-class DbEngineSpecsTests(DbEngineSpecTestCase):
+class TestDbEngineSpecs(TestDbEngineSpec):
     def test_extract_limit_from_query(self, engine_spec_class=BaseEngineSpec):
         q0 = "select * from table"
         q1 = "select * from mytable limit 10"
@@ -147,16 +154,16 @@ class DbEngineSpecsTests(DbEngineSpecTestCase):
             """SELECT 'LIMIT 777'""", """SELECT 'LIMIT 777'\nLIMIT 1000"""
         )
 
-    def test_time_grain_blacklist(self):
+    def test_time_grain_denylist(self):
         with app.app_context():
-            app.config["TIME_GRAIN_BLACKLIST"] = ["PT1M"]
-            time_grain_functions = SqliteEngineSpec.get_time_grain_functions()
+            app.config["TIME_GRAIN_DENYLIST"] = ["PT1M"]
+            time_grain_functions = SqliteEngineSpec.get_time_grain_expressions()
             self.assertNotIn("PT1M", time_grain_functions)
 
     def test_time_grain_addons(self):
         with app.app_context():
             app.config["TIME_GRAIN_ADDONS"] = {"PTXM": "x seconds"}
-            app.config["TIME_GRAIN_ADDON_FUNCTIONS"] = {
+            app.config["TIME_GRAIN_ADDON_EXPRESSIONS"] = {
                 "sqlite": {"PTXM": "ABC({col})"}
             }
             time_grains = SqliteEngineSpec.get_time_grains()
@@ -170,7 +177,7 @@ class DbEngineSpecsTests(DbEngineSpecTestCase):
         for engine in engines.values():
             if engine is not BaseEngineSpec:
                 # make sure time grain functions have been defined
-                self.assertGreater(len(engine.get_time_grain_functions()), 0)
+                self.assertGreater(len(engine.get_time_grain_expressions()), 0)
                 # make sure all defined time grains are supported
                 defined_grains = {grain.duration for grain in engine.get_time_grains()}
                 intersection = time_grains.intersection(defined_grains)
@@ -189,16 +196,24 @@ class DbEngineSpecsTests(DbEngineSpecTestCase):
         )
         self.assertListEqual(base_result_expected, base_result)
 
+    @pytest.mark.usefixtures("load_energy_table_with_slice")
     def test_column_datatype_to_string(self):
         example_db = get_example_database()
         sqla_table = example_db.get_table("energy_usage")
         dialect = example_db.get_dialect()
+
+        # TODO: fix column type conversion for presto.
+        if example_db.backend == "presto":
+            return
+
         col_names = [
             example_db.db_engine_spec.column_datatype_to_string(c.type, dialect)
             for c in sqla_table.columns
         ]
         if example_db.backend == "postgresql":
             expected = ["VARCHAR(255)", "VARCHAR(255)", "DOUBLE PRECISION"]
+        elif example_db.backend == "hive":
+            expected = ["STRING", "STRING", "FLOAT"]
         else:
             expected = ["VARCHAR(255)", "VARCHAR(255)", "FLOAT"]
         self.assertEqual(col_names, expected)
@@ -206,3 +221,37 @@ class DbEngineSpecsTests(DbEngineSpecTestCase):
     def test_convert_dttm(self):
         dttm = self.get_dttm()
         self.assertIsNone(BaseEngineSpec.convert_dttm("", dttm))
+
+    def test_pyodbc_rows_to_tuples(self):
+        # Test for case when pyodbc.Row is returned (odbc driver)
+        data = [
+            Row((1, 1, datetime.datetime(2017, 10, 19, 23, 39, 16, 660000))),
+            Row((2, 2, datetime.datetime(2018, 10, 19, 23, 39, 16, 660000))),
+        ]
+        expected = [
+            (1, 1, datetime.datetime(2017, 10, 19, 23, 39, 16, 660000)),
+            (2, 2, datetime.datetime(2018, 10, 19, 23, 39, 16, 660000)),
+        ]
+        result = BaseEngineSpec.pyodbc_rows_to_tuples(data)
+        self.assertListEqual(result, expected)
+
+    def test_pyodbc_rows_to_tuples_passthrough(self):
+        # Test for case when tuples are returned
+        data = [
+            (1, 1, datetime.datetime(2017, 10, 19, 23, 39, 16, 660000)),
+            (2, 2, datetime.datetime(2018, 10, 19, 23, 39, 16, 660000)),
+        ]
+        result = BaseEngineSpec.pyodbc_rows_to_tuples(data)
+        self.assertListEqual(result, data)
+
+
+def test_is_readonly():
+    def is_readonly(sql: str) -> bool:
+        return BaseEngineSpec.is_readonly_query(ParsedQuery(sql))
+
+    assert not is_readonly("SHOW LOCKS test EXTENDED")
+    assert not is_readonly("SET hivevar:desc='Legislators'")
+    assert not is_readonly("UPDATE t1 SET col1 = NULL")
+    assert is_readonly("EXPLAIN SELECT 1")
+    assert is_readonly("SELECT 1")
+    assert is_readonly("WITH (SELECT 1) bla SELECT * from bla")

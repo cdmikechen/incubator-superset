@@ -18,10 +18,12 @@
 datasource_post = {
     "id": None,
     "column_formats": {"ratio": ".2%"},
+    "database": {"id": 1},
     "description": "Adding a DESCRip",
     "default_endpoint": "",
     "filter_select_enabled": True,
     "name": "birth_names",
+    "table_name": "birth_names",
     "datasource_name": "birth_names",
     "type": "table",
     "schema": "",

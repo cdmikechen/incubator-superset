@@ -21,6 +21,8 @@ from logging.handlers import TimedRotatingFileHandler
 import flask.app
 import flask.config
 
+logger = logging.getLogger(__name__)
+
 
 # pylint: disable=too-few-public-methods
 class LoggingConfigurator(abc.ABC):
@@ -44,10 +46,8 @@ class DefaultLoggingConfigurator(LoggingConfigurator):
             superset_logger.setLevel(logging.DEBUG)
         else:
             # In production mode, add log handler to sys.stderr.
-            superset_logger.addHandler(
-                logging.StreamHandler()
-            )  # pylint: disable=no-member
-            superset_logger.setLevel(logging.INFO)  # pylint: disable=no-member
+            superset_logger.addHandler(logging.StreamHandler())
+            superset_logger.setLevel(logging.INFO)
 
         logging.getLogger("pyhive.presto").setLevel(logging.INFO)
 
@@ -56,7 +56,7 @@ class DefaultLoggingConfigurator(LoggingConfigurator):
 
         if app_config["ENABLE_TIME_ROTATE"]:
             logging.getLogger().setLevel(app_config["TIME_ROTATE_LOG_LEVEL"])
-            handler = TimedRotatingFileHandler(  # type: ignore
+            handler = TimedRotatingFileHandler(
                 app_config["FILENAME"],
                 when=app_config["ROLLOVER"],
                 interval=app_config["INTERVAL"],
@@ -64,4 +64,4 @@ class DefaultLoggingConfigurator(LoggingConfigurator):
             )
             logging.getLogger().addHandler(handler)
 
-        logging.info("logging was configured successfully")
+        logger.info("logging was configured successfully")

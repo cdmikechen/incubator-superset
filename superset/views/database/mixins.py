@@ -18,37 +18,14 @@ import inspect
 
 from flask import Markup
 from flask_babel import lazy_gettext as _
-from sqlalchemy import MetaData, or_
+from sqlalchemy import MetaData
 
-from superset import security_manager
+from superset import app, security_manager
+from superset.databases.filters import DatabaseFilter
 from superset.exceptions import SupersetException
+from superset.models.core import Database
+from superset.security.analytics_db_safety import check_sqlalchemy_uri
 from superset.utils import core as utils
-from superset.views.base import BaseFilter
-
-
-class DatabaseFilter(BaseFilter):
-    # TODO(bogdan): consider caching.
-    def schema_access_databases(self):  # noqa pylint: disable=no-self-use
-        found_databases = set()
-        for vm in security_manager.user_view_menu_names("schema_access"):
-            database_name, _ = security_manager.unpack_schema_perm(vm)
-            found_databases.add(database_name)
-        return found_databases
-
-    def apply(
-        self, query, func
-    ):  # noqa pylint: disable=unused-argument,arguments-differ
-        if security_manager.all_database_access():
-            return query
-        database_perms = security_manager.user_view_menu_names("database_access")
-        # TODO(bogdan): consider adding datasource access here as well.
-        schema_access_databases = self.schema_access_databases()
-        return query.filter(
-            or_(
-                self.model.perm.in_(database_perms),
-                self.model.database_name.in_(schema_access_databases),
-            )
-        )
 
 
 class DatabaseMixin:
@@ -60,10 +37,8 @@ class DatabaseMixin:
     list_columns = [
         "database_name",
         "backend",
-        "allow_run_async",
-        "allow_dml",
-        "allow_csv_upload",
         "expose_in_sqllab",
+        "allow_run_async",
         "creator",
         "modified",
     ]
@@ -83,12 +58,14 @@ class DatabaseMixin:
         "allow_run_async",
         "allow_csv_upload",
         "allow_ctas",
+        "allow_cvas",
         "allow_dml",
         "force_ctas_schema",
         "impersonate_user",
         "allow_multi_schema_metadata_fetch",
         "extra",
         "encrypted_extra",
+        "server_cert",
     ]
     search_exclude_columns = (
         "password",
@@ -98,6 +75,7 @@ class DatabaseMixin:
         "queries",
         "saved_queries",
         "encrypted_extra",
+        "server_cert",
     )
     edit_columns = add_columns
     show_columns = [
@@ -132,6 +110,7 @@ class DatabaseMixin:
             "for more information."
         ),
         "allow_ctas": _("Allow CREATE TABLE AS option in SQL Lab"),
+        "allow_cvas": _("Allow CREATE VIEW AS option in SQL Lab"),
         "allow_dml": _(
             "Allow users to run non-SELECT statements "
             "(UPDATE, DELETE, CREATE, ...) "
@@ -161,9 +140,11 @@ class DatabaseMixin:
             'Specify it as **"schemas_allowed_for_csv_upload": '
             '["public", "csv_upload"]**. '
             "If database flavor does not support schema or any schema is allowed "
-            "to be accessed, just leave the list empty"
+            "to be accessed, just leave the list empty<br/>"
             "4. the ``version`` field is a string specifying the this db's version. "
-            "This should be used with Presto DBs so that the syntax is correct",
+            "This should be used with Presto DBs so that the syntax is correct<br/>"
+            "5. The ``allows_virtual_table_explore`` field is a boolean specifying "
+            "whether or not the Explore button in SQL Lab results is shown.",
             True,
         ),
         "encrypted_extra": utils.markdown(
@@ -171,6 +152,11 @@ class DatabaseMixin:
             "This is used to provide connection information for systems like "
             "Hive, Presto, and BigQuery, which do not conform to the username:password "
             "syntax normally used by SQLAlchemy.",
+            True,
+        ),
+        "server_cert": utils.markdown(
+            "Optional CA_BUNDLE contents to validate HTTPS requests. Only available "
+            "on certain database engines.",
             True,
         ),
         "impersonate_user": _(
@@ -198,6 +184,7 @@ class DatabaseMixin:
     label_columns = {
         "expose_in_sqllab": _("Expose in SQL Lab"),
         "allow_ctas": _("Allow CREATE TABLE AS"),
+        "allow_cvas": _("Allow CREATE VIEW AS"),
         "allow_dml": _("Allow DML"),
         "force_ctas_schema": _("CTAS Schema"),
         "database_name": _("Database"),
@@ -207,7 +194,8 @@ class DatabaseMixin:
         "cache_timeout": _("Chart Cache Timeout"),
         "extra": _("Extra"),
         "encrypted_extra": _("Secure Extra"),
-        "allow_run_async": _("Asynchronous Query Execution"),
+        "server_cert": _("Root certificate"),
+        "allow_run_async": _("Async Execution"),
         "impersonate_user": _("Impersonate the logged on user"),
         "allow_csv_upload": _("Allow Csv Upload"),
         "modified": _("Modified"),
@@ -215,9 +203,13 @@ class DatabaseMixin:
         "backend": _("Backend"),
     }
 
-    def _pre_add_update(self, database):
+    def _pre_add_update(self, database: Database) -> None:
+        if app.config["PREVENT_UNSAFE_DB_CONNECTIONS"]:
+            check_sqlalchemy_uri(database.sqlalchemy_uri)
         self.check_extra(database)
         self.check_encrypted_extra(database)
+        if database.server_cert:
+            utils.parse_ssl_cert(database.server_cert)
         database.set_sqlalchemy_uri(database.sqlalchemy_uri)
         security_manager.add_permission_view_menu("database_access", database.perm)
         # adding a new database we always want to force refresh schema list
@@ -226,42 +218,51 @@ class DatabaseMixin:
                 "schema_access", security_manager.get_schema_perm(database, schema)
             )
 
-    def pre_add(self, database):
+    def pre_add(self, database: Database) -> None:
         self._pre_add_update(database)
 
-    def pre_update(self, database):
+    def pre_update(self, database: Database) -> None:
         self._pre_add_update(database)
 
-    def pre_delete(self, obj):  # pylint: disable=no-self-use
-        if obj.tables:
+    def pre_delete(self, database: Database) -> None:  # pylint: disable=no-self-use
+        if database.tables:
             raise SupersetException(
                 Markup(
                     "Cannot delete a database that has tables attached. "
                     "Here's the list of associated tables: "
-                    + ", ".join("{}".format(o) for o in obj.tables)
+                    + ", ".join("{}".format(table) for table in database.tables)
                 )
             )
 
-    def check_extra(self, database):  # pylint: disable=no-self-use
+    def check_extra(self, database: Database) -> None:  # pylint: disable=no-self-use
         # this will check whether json.loads(extra) can succeed
         try:
             extra = database.get_extra()
-        except Exception as e:
-            raise Exception("Extra field cannot be decoded by JSON. {}".format(str(e)))
+        except Exception as ex:
+            raise Exception(
+                _("Extra field cannot be decoded by JSON. %(msg)s", msg=str(ex))
+            )
 
         # this will check whether 'metadata_params' is configured correctly
         metadata_signature = inspect.signature(MetaData)
         for key in extra.get("metadata_params", {}):
             if key not in metadata_signature.parameters:
                 raise Exception(
-                    "The metadata_params in Extra field "
-                    "is not configured correctly. The key "
-                    "{} is invalid.".format(key)
+                    _(
+                        "The metadata_params in Extra field "
+                        "is not configured correctly. The key "
+                        "%{key}s is invalid.",
+                        key=key,
+                    )
                 )
 
-    def check_encrypted_extra(self, database):  # pylint: disable=no-self-use
+    def check_encrypted_extra(  # pylint: disable=no-self-use
+        self, database: Database
+    ) -> None:
         # this will check whether json.loads(secure_extra) can succeed
         try:
             database.get_encrypted_extra()
-        except Exception as e:
-            raise Exception(f"Secure Extra field cannot be decoded as JSON. {str(e)}")
+        except Exception as ex:
+            raise Exception(
+                _("Extra field cannot be decoded by JSON. %(msg)s", msg=str(ex))
+            )

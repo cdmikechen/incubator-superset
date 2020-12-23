@@ -19,11 +19,12 @@ from superset.db_engine_specs.base import BaseEngineSpec, LimitMethod
 
 class Db2EngineSpec(BaseEngineSpec):
     engine = "ibm_db_sa"
+    engine_name = "IBM Db2"
     limit_method = LimitMethod.WRAP_SQL
     force_column_alias_quotes = True
     max_column_name_length = 30
 
-    _time_grain_functions = {
+    _time_grain_expressions = {
         None: "{col}",
         "PT1S": "CAST({col} as TIMESTAMP)" " - MICROSECOND({col}) MICROSECONDS",
         "PT1M": "CAST({col} as TIMESTAMP)"

@@ -18,31 +18,134 @@
 """Unit tests for Superset"""
 import imp
 import json
-from typing import Union
-from unittest.mock import Mock
+from typing import Any, Dict, Union, List, Optional
+from unittest.mock import Mock, patch
 
 import pandas as pd
+import pytest
+from flask import Response
 from flask_appbuilder.security.sqla import models as ab_models
 from flask_testing import TestCase
+from sqlalchemy.orm import Session
 
-from tests.test_app import app  # isort:skip
+from tests.test_app import app
+from superset.sql_parse import CtasMethod
 from superset import db, security_manager
+from superset.connectors.base.models import BaseDatasource
 from superset.connectors.druid.models import DruidCluster, DruidDatasource
 from superset.connectors.sqla.models import SqlaTable
 from superset.models import core as models
+from superset.models.slice import Slice
 from superset.models.core import Database
+from superset.models.dashboard import Dashboard
+from superset.models.datasource_access_request import DatasourceAccessRequest
 from superset.utils.core import get_example_database
+from superset.views.base_api import BaseSupersetModelRestApi
 
 FAKE_DB_NAME = "fake_db_100"
+test_client = app.test_client()
+
+
+def login(client: Any, username: str = "admin", password: str = "general"):
+    resp = get_resp(client, "/login/", data=dict(username=username, password=password))
+    assert "User confirmation needed" not in resp
+
+
+def get_resp(
+    client: Any,
+    url: str,
+    data: Any = None,
+    follow_redirects: bool = True,
+    raise_on_error: bool = True,
+    json_: Optional[str] = None,
+):
+    """Shortcut to get the parsed results while following redirects"""
+    if data:
+        resp = client.post(url, data=data, follow_redirects=follow_redirects)
+    elif json_:
+        resp = client.post(url, json=json_, follow_redirects=follow_redirects)
+    else:
+        resp = client.get(url, follow_redirects=follow_redirects)
+    if raise_on_error and resp.status_code > 400:
+        raise Exception("http request failed with code {}".format(resp.status_code))
+    return resp.data.decode("utf-8")
+
+
+def post_assert_metric(
+    client: Any, uri: str, data: Dict[str, Any], func_name: str
+) -> Response:
+    """
+    Simple client post with an extra assertion for statsd metrics
+
+    :param client: test client for superset api requests
+    :param uri: The URI to use for the HTTP POST
+    :param data: The JSON data payload to be posted
+    :param func_name: The function name that the HTTP POST triggers
+    for the statsd metric assertion
+    :return: HTTP Response
+    """
+    with patch.object(
+        BaseSupersetModelRestApi, "incr_stats", return_value=None
+    ) as mock_method:
+        rv = client.post(uri, json=data)
+    if 200 <= rv.status_code < 400:
+        mock_method.assert_called_once_with("success", func_name)
+    else:
+        mock_method.assert_called_once_with("error", func_name)
+    return rv
+
+
+@pytest.fixture
+def logged_in_admin():
+    """Fixture with app context and logged in admin user."""
+    with app.app_context():
+        login(test_client, username="admin")
+        yield
+        test_client.get("/logout/", follow_redirects=True)
 
 
 class SupersetTestCase(TestCase):
-    def __init__(self, *args, **kwargs):
-        super(SupersetTestCase, self).__init__(*args, **kwargs)
-        self.maxDiff = None
+
+    default_schema_backend_map = {
+        "sqlite": "main",
+        "mysql": "superset",
+        "postgresql": "public",
+        "presto": "default",
+        "hive": "default",
+    }
+
+    maxDiff = -1
 
     def create_app(self):
         return app
+
+    @staticmethod
+    def get_birth_names_dataset():
+        example_db = get_example_database()
+        return (
+            db.session.query(SqlaTable)
+            .filter_by(database=example_db, table_name="birth_names")
+            .one()
+        )
+
+    @staticmethod
+    def create_user_with_roles(username: str, roles: List[str]):
+        user_to_create = security_manager.find_user(username)
+        if not user_to_create:
+            security_manager.add_user(
+                username,
+                username,
+                username,
+                f"{username}@superset.com",
+                security_manager.find_role("Gamma"),  # it needs a role
+                password="general",
+            )
+            db.session.commit()
+            user_to_create = security_manager.find_user(username)
+            assert user_to_create
+        user_to_create.roles = [security_manager.find_role(r) for r in roles]
+        db.session.commit()
+        return user_to_create
 
     @staticmethod
     def create_user(
@@ -58,9 +161,19 @@ class SupersetTestCase(TestCase):
             username, first_name, last_name, email, role_admin, password
         )
 
+    @staticmethod
+    def get_user(username: str) -> ab_models.User:
+        user = (
+            db.session.query(security_manager.user_model)
+            .filter_by(username=username)
+            .one_or_none()
+        )
+        return user
+
     @classmethod
     def create_druid_test_objects(cls):
         # create druid cluster and druid datasources
+
         with app.app_context():
             session = db.session
             cluster = (
@@ -72,16 +185,17 @@ class SupersetTestCase(TestCase):
                 session.commit()
 
                 druid_datasource1 = DruidDatasource(
-                    datasource_name="druid_ds_1", cluster_name="druid_test"
+                    datasource_name="druid_ds_1", cluster=cluster
                 )
                 session.add(druid_datasource1)
                 druid_datasource2 = DruidDatasource(
-                    datasource_name="druid_ds_2", cluster_name="druid_test"
+                    datasource_name="druid_ds_2", cluster=cluster
                 )
                 session.add(druid_datasource2)
                 session.commit()
 
-    def get_table(self, table_id):
+    @staticmethod
+    def get_table_by_id(table_id: int) -> SqlaTable:
         return db.session.query(SqlaTable).filter_by(id=table_id).one()
 
     @staticmethod
@@ -102,24 +216,30 @@ class SupersetTestCase(TestCase):
         return obj
 
     def login(self, username="admin", password="general"):
-        resp = self.get_resp("/login/", data=dict(username=username, password=password))
-        self.assertNotIn("User confirmation needed", resp)
+        return login(self.client, username, password)
 
-    def get_slice(self, slice_name, session):
-        slc = session.query(models.Slice).filter_by(slice_name=slice_name).one()
-        session.expunge_all()
+    def get_slice(
+        self, slice_name: str, session: Session, expunge_from_session: bool = True
+    ) -> Slice:
+        slc = session.query(Slice).filter_by(slice_name=slice_name).one()
+        if expunge_from_session:
+            session.expunge_all()
         return slc
 
-    def get_table_by_name(self, name):
+    @staticmethod
+    def get_table_by_name(name: str) -> SqlaTable:
         return db.session.query(SqlaTable).filter_by(table_name=name).one()
 
-    def get_database_by_id(self, db_id):
+    @staticmethod
+    def get_database_by_id(db_id: int) -> Database:
         return db.session.query(Database).filter_by(id=db_id).one()
 
-    def get_druid_ds_by_name(self, name):
+    @staticmethod
+    def get_druid_ds_by_name(name: str) -> DruidDatasource:
         return db.session.query(DruidDatasource).filter_by(datasource_name=name).first()
 
-    def get_datasource_mock(self):
+    @staticmethod
+    def get_datasource_mock() -> BaseDatasource:
         datasource = Mock()
         results = Mock()
         results.query = Mock()
@@ -139,16 +259,7 @@ class SupersetTestCase(TestCase):
     def get_resp(
         self, url, data=None, follow_redirects=True, raise_on_error=True, json_=None
     ):
-        """Shortcut to get the parsed results while following redirects"""
-        if data:
-            resp = self.client.post(url, data=data, follow_redirects=follow_redirects)
-        elif json_:
-            resp = self.client.post(url, json=json_, follow_redirects=follow_redirects)
-        else:
-            resp = self.client.get(url, follow_redirects=follow_redirects)
-        if raise_on_error and resp.status_code > 400:
-            raise Exception("http request failed with code {}".format(resp.status_code))
-        return resp.data.decode("utf-8")
+        return get_resp(self.client, url, data, follow_redirects, raise_on_error, json_)
 
     def get_json_resp(
         self, url, data=None, follow_redirects=True, raise_on_error=True, json_=None
@@ -158,7 +269,7 @@ class SupersetTestCase(TestCase):
         return json.loads(resp)
 
     def get_access_requests(self, username, ds_type, ds_id):
-        DAR = models.DatasourceAccessRequest
+        DAR = DatasourceAccessRequest
         return (
             db.session.query(DAR)
             .filter(
@@ -209,22 +320,34 @@ class SupersetTestCase(TestCase):
         query_limit=None,
         database_name="examples",
         sql_editor_id=None,
+        select_as_cta=False,
+        tmp_table_name=None,
+        schema=None,
+        ctas_method=CtasMethod.TABLE,
+        template_params="{}",
     ):
         if user_name:
             self.logout()
             self.login(username=(user_name or "admin"))
         dbid = self._get_database_by_name(database_name).id
+        json_payload = {
+            "database_id": dbid,
+            "sql": sql,
+            "client_id": client_id,
+            "queryLimit": query_limit,
+            "sql_editor_id": sql_editor_id,
+            "ctas_method": ctas_method,
+            "templateParams": template_params,
+        }
+        if tmp_table_name:
+            json_payload["tmp_table_name"] = tmp_table_name
+        if select_as_cta:
+            json_payload["select_as_cta"] = select_as_cta
+        if schema:
+            json_payload["schema"] = schema
+
         resp = self.get_json_resp(
-            "/superset/sql_json/",
-            raise_on_error=False,
-            json_=dict(
-                database_id=dbid,
-                sql=sql,
-                select_as_create_as=False,
-                client_id=client_id,
-                queryLimit=query_limit,
-                sql_editor_id=sql_editor_id,
-            ),
+            "/superset/sql_json/", raise_on_error=False, json_=json_payload
         )
         if raise_on_error and "error" in resp:
             raise Exception("run_sql failed")
@@ -243,7 +366,7 @@ class SupersetTestCase(TestCase):
             cls=models.Database,
             criteria={"database_name": database_name},
             session=db.session,
-            sqlalchemy_uri="sqlite://test",
+            sqlalchemy_uri="sqlite:///:memory:",
             id=db_id,
             extra=extra,
         )
@@ -256,6 +379,28 @@ class SupersetTestCase(TestCase):
         )
         if database:
             db.session.delete(database)
+
+    def create_fake_db_for_macros(self):
+        self.login(username="admin")
+        database_name = "db_for_macros_testing"
+        db_id = 200
+        return self.get_or_create(
+            cls=models.Database,
+            criteria={"database_name": database_name},
+            session=db.session,
+            sqlalchemy_uri="db_for_macros_testing://user@host:8080/hive",
+            id=db_id,
+        )
+
+    def delete_fake_db_for_macros(self):
+        database = (
+            db.session.query(Database)
+            .filter(Database.database_name == "db_for_macros_testing")
+            .scalar()
+        )
+        if database:
+            db.session.delete(database)
+            db.session.commit()
 
     def validate_sql(
         self,
@@ -280,4 +425,69 @@ class SupersetTestCase(TestCase):
 
     def get_dash_by_slug(self, dash_slug):
         sesh = db.session()
-        return sesh.query(models.Dashboard).filter_by(slug=dash_slug).first()
+        return sesh.query(Dashboard).filter_by(slug=dash_slug).first()
+
+    def get_assert_metric(self, uri: str, func_name: str) -> Response:
+        """
+        Simple client get with an extra assertion for statsd metrics
+
+        :param uri: The URI to use for the HTTP GET
+        :param func_name: The function name that the HTTP GET triggers
+        for the statsd metric assertion
+        :return: HTTP Response
+        """
+        with patch.object(
+            BaseSupersetModelRestApi, "incr_stats", return_value=None
+        ) as mock_method:
+            rv = self.client.get(uri)
+        if 200 <= rv.status_code < 400:
+            mock_method.assert_called_once_with("success", func_name)
+        else:
+            mock_method.assert_called_once_with("error", func_name)
+        return rv
+
+    def delete_assert_metric(self, uri: str, func_name: str) -> Response:
+        """
+        Simple client delete with an extra assertion for statsd metrics
+
+        :param uri: The URI to use for the HTTP DELETE
+        :param func_name: The function name that the HTTP DELETE triggers
+        for the statsd metric assertion
+        :return: HTTP Response
+        """
+        with patch.object(
+            BaseSupersetModelRestApi, "incr_stats", return_value=None
+        ) as mock_method:
+            rv = self.client.delete(uri)
+        if 200 <= rv.status_code < 400:
+            mock_method.assert_called_once_with("success", func_name)
+        else:
+            mock_method.assert_called_once_with("error", func_name)
+        return rv
+
+    def post_assert_metric(
+        self, uri: str, data: Dict[str, Any], func_name: str
+    ) -> Response:
+        return post_assert_metric(self.client, uri, data, func_name)
+
+    def put_assert_metric(
+        self, uri: str, data: Dict[str, Any], func_name: str
+    ) -> Response:
+        """
+        Simple client put with an extra assertion for statsd metrics
+
+        :param uri: The URI to use for the HTTP PUT
+        :param data: The JSON data payload to be posted
+        :param func_name: The function name that the HTTP PUT triggers
+        for the statsd metric assertion
+        :return: HTTP Response
+        """
+        with patch.object(
+            BaseSupersetModelRestApi, "incr_stats", return_value=None
+        ) as mock_method:
+            rv = self.client.put(uri, json=data)
+        if 200 <= rv.status_code < 400:
+            mock_method.assert_called_once_with("success", func_name)
+        else:
+            mock_method.assert_called_once_with("error", func_name)
+        return rv

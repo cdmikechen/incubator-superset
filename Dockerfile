@@ -18,7 +18,7 @@
 ######################################################################
 # PY stage that simply does a pip install on our requirements
 ######################################################################
-ARG PY_VER=3.6.9
+ARG PY_VER=3.7.9
 FROM python:${PY_VER} AS superset-py
 
 RUN mkdir /app \
@@ -27,38 +27,50 @@ RUN mkdir /app \
             build-essential \
             default-libmysqlclient-dev \
             libpq-dev \
+            libsasl2-dev \
+            libecpg-dev \
         && rm -rf /var/lib/apt/lists/*
 
 # First, we just wanna install requirements, which will allow us to utilize the cache
 # in order to only build if and only if requirements change
-COPY ./requirements.txt /app/
+COPY ./requirements/*.txt  /app/requirements/
+COPY setup.py MANIFEST.in README.md /app/
+COPY superset-frontend/package.json /app/superset-frontend/
 RUN cd /app \
-        && pip install --no-cache -r requirements.txt
+    && mkdir -p superset/static \
+    && touch superset/static/version_info.json \
+    && pip install --no-cache -r requirements/local.txt
 
 
 ######################################################################
 # Node stage to deal with static asset construction
 ######################################################################
-FROM node:10-jessie AS superset-node
+FROM node:12 AS superset-node
+
+ARG NPM_BUILD_CMD="build"
+ENV BUILD_CMD=${NPM_BUILD_CMD}
 
 # NPM ci first, as to NOT invalidate previous steps except for when package.json changes
+RUN mkdir -p /app/superset-frontend
 RUN mkdir -p /app/superset/assets
-COPY ./superset/assets/package* /app/superset/assets/
-RUN cd /app/superset/assets \
+COPY ./docker/frontend-mem-nag.sh /
+COPY ./superset-frontend/package* /app/superset-frontend/
+RUN /frontend-mem-nag.sh \
+        && cd /app/superset-frontend \
         && npm ci
 
 # Next, copy in the rest and let webpack do its thing
-COPY ./superset/assets /app/superset/assets
+COPY ./superset-frontend /app/superset-frontend
 # This is BY FAR the most expensive step (thanks Terser!)
-RUN cd /app/superset/assets \
-        && npm run build \
+RUN cd /app/superset-frontend \
+        && npm run ${BUILD_CMD} \
         && rm -rf node_modules
 
 
 ######################################################################
 # Final lean image...
 ######################################################################
-ARG PY_VER=3.6.9
+ARG PY_VER=3.7.9
 FROM python:${PY_VER} AS lean
 
 ENV LANG=C.UTF-8 \
@@ -78,10 +90,11 @@ RUN useradd --user-group --no-create-home --no-log-init --shell /bin/bash supers
             libpq-dev \
         && rm -rf /var/lib/apt/lists/*
 
-COPY --from=superset-py /usr/local/lib/python3.6/site-packages/ /usr/local/lib/python3.6/site-packages/
+COPY --from=superset-py /usr/local/lib/python3.7/site-packages/ /usr/local/lib/python3.7/site-packages/
 # Copying site-packages doesn't move the CLIs, so let's copy them one by one
 COPY --from=superset-py /usr/local/bin/gunicorn /usr/local/bin/celery /usr/local/bin/flask /usr/bin/
-COPY --from=superset-node /app/superset/assets /app/superset/assets
+COPY --from=superset-node /app/superset/static/assets /app/superset/static/assets
+COPY --from=superset-node /app/superset-frontend /app/superset-frontend
 
 ## Lastly, let's install superset itself
 COPY superset /app/superset
@@ -96,7 +109,7 @@ WORKDIR /app
 
 USER superset
 
-HEALTHCHECK CMD ["curl", "-f", "http://localhost:8088/health"]
+HEALTHCHECK CMD curl -f "http://localhost:$SUPERSET_PORT/health"
 
 EXPOSE ${SUPERSET_PORT}
 
@@ -107,9 +120,11 @@ ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
 ######################################################################
 FROM lean AS dev
 
-COPY ./requirements-dev.txt ./docker/requirements-extra.txt /app/
+COPY ./requirements/*.txt ./docker/requirements-*.txt/ /app/requirements/
 
 USER root
+# Cache everything for dev purposes...
 RUN cd /app \
-    && pip install --no-cache -r requirements-dev.txt -r requirements-extra.txt
+    && pip install --no-cache -r requirements/docker.txt \
+    && pip install --no-cache -r requirements/requirements-local.txt || true
 USER superset

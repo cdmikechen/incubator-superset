@@ -14,8 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Optional
-
 from flask import Flask
 from flask_caching import Cache
 
@@ -24,33 +22,41 @@ class CacheManager:
     def __init__(self) -> None:
         super().__init__()
 
-        self._tables_cache = None
-        self._cache = None
+        self._cache = Cache()
+        self._data_cache = Cache()
+        self._thumbnail_cache = Cache()
 
-    def init_app(self, app):
-        self._cache = self._setup_cache(app, app.config.get("CACHE_CONFIG"))
-        self._tables_cache = self._setup_cache(
-            app, app.config.get("TABLE_NAMES_CACHE_CONFIG")
+    def init_app(self, app: Flask) -> None:
+        self._cache.init_app(
+            app,
+            {
+                "CACHE_DEFAULT_TIMEOUT": app.config["CACHE_DEFAULT_TIMEOUT"],
+                **app.config["CACHE_CONFIG"],
+            },
+        )
+        self._data_cache.init_app(
+            app,
+            {
+                "CACHE_DEFAULT_TIMEOUT": app.config["CACHE_DEFAULT_TIMEOUT"],
+                **app.config["DATA_CACHE_CONFIG"],
+            },
+        )
+        self._thumbnail_cache.init_app(
+            app,
+            {
+                "CACHE_DEFAULT_TIMEOUT": app.config["CACHE_DEFAULT_TIMEOUT"],
+                **app.config["THUMBNAIL_CACHE_CONFIG"],
+            },
         )
 
-    @staticmethod
-    def _setup_cache(app: Flask, cache_config) -> Optional[Cache]:
-        """Setup the flask-cache on a flask app"""
-        if cache_config:
-            if isinstance(cache_config, dict):
-                if cache_config.get("CACHE_TYPE") != "null":
-                    return Cache(app, config=cache_config)
-            else:
-                # Accepts a custom cache initialization function,
-                # returning an object compatible with Flask-Caching API
-                return cache_config(app)
-
-        return None
+    @property
+    def data_cache(self) -> Cache:
+        return self._data_cache
 
     @property
-    def tables_cache(self):
-        return self._tables_cache
-
-    @property
-    def cache(self):
+    def cache(self) -> Cache:
         return self._cache
+
+    @property
+    def thumbnail_cache(self) -> Cache:
+        return self._thumbnail_cache

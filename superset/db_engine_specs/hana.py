@@ -19,15 +19,17 @@ from typing import Optional
 
 from superset.db_engine_specs.base import LimitMethod
 from superset.db_engine_specs.postgres import PostgresBaseEngineSpec
+from superset.utils import core as utils
 
 
 class HanaEngineSpec(PostgresBaseEngineSpec):
     engine = "hana"
+    engine_name = "SAP HANA"
     limit_method = LimitMethod.WRAP_SQL
     force_column_alias_quotes = True
     max_column_name_length = 30
 
-    _time_grain_functions = {
+    _time_grain_expressions = {
         None: "{col}",
         "PT1S": "TO_TIMESTAMP(SUBSTRING(TO_TIMESTAMP({col}),0,20))",
         "PT1M": "TO_TIMESTAMP(SUBSTRING(TO_TIMESTAMP({col}),0,17) || '00')",
@@ -43,8 +45,9 @@ class HanaEngineSpec(PostgresBaseEngineSpec):
     @classmethod
     def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
-        if tt == "DATE":
+        if tt == utils.TemporalType.DATE:
             return f"TO_DATE('{dttm.date().isoformat()}', 'YYYY-MM-DD')"
-        if tt == "TIMESTAMP":
-            return f"""TO_TIMESTAMP('{dttm.isoformat(timespec="microseconds")}', 'YYYY-MM-DD"T"HH24:MI:SS.ff6')"""  # pylint: disable=line-too-long
+        if tt == utils.TemporalType.TIMESTAMP:
+            return f"""TO_TIMESTAMP('{dttm
+                .isoformat(timespec="microseconds")}', 'YYYY-MM-DD"T"HH24:MI:SS.ff6')"""
         return None

@@ -17,26 +17,17 @@
 import hashlib
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import pandas as pd
 from sqlalchemy import literal_column
+from sqlalchemy.sql.expression import ColumnClause
 
 from superset.db_engine_specs.base import BaseEngineSpec
+from superset.utils import core as utils
 
-pandas_dtype_map = {
-    "STRING": "object",
-    "BOOLEAN": "object",  # to support nullable bool
-    "INTEGER": "Int64",
-    "FLOAT": "float64",
-    "TIMESTAMP": "datetime64[ns]",
-    "DATETIME": "datetime64[ns]",
-    "DATE": "object",
-    "BYTES": "object",
-    "TIME": "object",
-    "RECORD": "object",
-    "NUMERIC": "object",
-}
+if TYPE_CHECKING:
+    from superset.models.core import Database  # pragma: no cover
 
 
 class BigQueryEngineSpec(BaseEngineSpec):
@@ -45,7 +36,12 @@ class BigQueryEngineSpec(BaseEngineSpec):
     As contributed by @mxmzdlv on issue #945"""
 
     engine = "bigquery"
+    engine_name = "Google BigQuery"
     max_column_name_length = 128
+
+    # BigQuery doesn't maintain context when running multiple statements in the
+    # same cursor, so we need to run all statements at once
+    run_multiple_statements_as_one = True
 
     """
     https://www.python.org/dev/peps/pep-0249/#arraysize
@@ -59,32 +55,45 @@ class BigQueryEngineSpec(BaseEngineSpec):
     """
     arraysize = 5000
 
-    _time_grain_functions = {
+    _date_trunc_functions = {
+        "DATE": "DATE_TRUNC",
+        "DATETIME": "DATETIME_TRUNC",
+        "TIME": "TIME_TRUNC",
+        "TIMESTAMP": "TIMESTAMP_TRUNC",
+    }
+
+    _time_grain_expressions = {
         None: "{col}",
-        "PT1S": "TIMESTAMP_TRUNC({col}, SECOND)",
-        "PT1M": "TIMESTAMP_TRUNC({col}, MINUTE)",
-        "PT1H": "TIMESTAMP_TRUNC({col}, HOUR)",
-        "P1D": "TIMESTAMP_TRUNC({col}, DAY)",
-        "P1W": "TIMESTAMP_TRUNC({col}, WEEK)",
-        "P1M": "TIMESTAMP_TRUNC({col}, MONTH)",
-        "P0.25Y": "TIMESTAMP_TRUNC({col}, QUARTER)",
-        "P1Y": "TIMESTAMP_TRUNC({col}, YEAR)",
+        "PT1S": "{func}({col}, SECOND)",
+        "PT1M": "{func}({col}, MINUTE)",
+        "PT1H": "{func}({col}, HOUR)",
+        "P1D": "{func}({col}, DAY)",
+        "P1W": "{func}({col}, WEEK)",
+        "P1M": "{func}({col}, MONTH)",
+        "P0.25Y": "{func}({col}, QUARTER)",
+        "P1Y": "{func}({col}, YEAR)",
     }
 
     @classmethod
     def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
-        if tt == "DATE":
+        if tt == utils.TemporalType.DATE:
             return f"CAST('{dttm.date().isoformat()}' AS DATE)"
-        if tt == "DATETIME":
+        if tt == utils.TemporalType.DATETIME:
             return f"""CAST('{dttm.isoformat(timespec="microseconds")}' AS DATETIME)"""
-        if tt == "TIMESTAMP":
+        if tt == utils.TemporalType.TIME:
+            return f"""CAST('{dttm.strftime("%H:%M:%S.%f")}' AS TIME)"""
+        if tt == utils.TemporalType.TIMESTAMP:
             return f"""CAST('{dttm.isoformat(timespec="microseconds")}' AS TIMESTAMP)"""
         return None
 
     @classmethod
-    def fetch_data(cls, cursor, limit: int) -> List[Tuple]:
-        data = super(BigQueryEngineSpec, cls).fetch_data(cursor, limit)
+    def fetch_data(
+        cls, cursor: Any, limit: Optional[int] = None
+    ) -> List[Tuple[Any, ...]]:
+        data = super().fetch_data(cursor, limit)
+        # Support type BigQuery Row, introduced here PR #4071
+        # google.cloud.bigquery.table.Row
         if data and type(data[0]).__name__ == "Row":
             data = [r.values() for r in data]  # type: ignore
         return data
@@ -125,8 +134,27 @@ class BigQueryEngineSpec(BaseEngineSpec):
         return "_" + hashlib.md5(label.encode("utf-8")).hexdigest()
 
     @classmethod
+    def normalize_indexes(cls, indexes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Normalizes indexes for more consistency across db engines
+
+        :param indexes: Raw indexes as returned by SQLAlchemy
+        :return: cleaner, more aligned index definition
+        """
+        normalized_idxs = []
+        # Fixing a bug/behavior observed in pybigquery==0.4.15 where
+        # the index's `column_names` == [None]
+        # Here we're returning only non-None indexes
+        for ix in indexes:
+            column_names = ix.get("column_names") or []
+            ix["column_names"] = [col for col in column_names if col is not None]
+            if ix["column_names"]:
+                normalized_idxs.append(ix)
+        return normalized_idxs
+
+    @classmethod
     def extra_table_metadata(
-        cls, database, table_name: str, schema_name: str
+        cls, database: "Database", table_name: str, schema_name: str
     ) -> Dict[str, Any]:
         indexes = database.get_indexes(table_name, schema_name)
         if not indexes:
@@ -147,7 +175,7 @@ class BigQueryEngineSpec(BaseEngineSpec):
         }
 
     @classmethod
-    def _get_fields(cls, cols):
+    def _get_fields(cls, cols: List[Dict[str, Any]]) -> List[ColumnClause]:
         """
         BigQuery dialect requires us to not use backtick in the fieldname which are
         nested.
@@ -157,8 +185,7 @@ class BigQueryEngineSpec(BaseEngineSpec):
         column names in the result.
         """
         return [
-            literal_column(c.get("name")).label(c.get("name").replace(".", "__"))
-            for c in cols
+            literal_column(c["name"]).label(c["name"].replace(".", "__")) for c in cols
         ]
 
     @classmethod
@@ -170,28 +197,28 @@ class BigQueryEngineSpec(BaseEngineSpec):
         return "TIMESTAMP_MILLIS({col})"
 
     @classmethod
-    def df_to_sql(cls, df: pd.DataFrame, **kwargs):
+    def df_to_sql(cls, df: pd.DataFrame, **kwargs: Any) -> None:
         """
         Upload data from a Pandas DataFrame to BigQuery. Calls
         `DataFrame.to_gbq()` which requires `pandas_gbq` to be installed.
 
         :param df: Dataframe with data to be uploaded
-        :param kwargs: kwargs to be passed to to_gbq() method. Requires both `schema
-        and ``name` to be present in kwargs, which are combined and passed to
-        `to_gbq()` as `destination_table`.
+        :param kwargs: kwargs to be passed to to_gbq() method. Requires that `schema`,
+        `name` and `con` are present in kwargs. `name` and `schema` are combined
+         and passed to `to_gbq()` as `destination_table`.
         """
         try:
             import pandas_gbq
             from google.oauth2 import service_account
         except ImportError:
             raise Exception(
-                "Could not import the library `pandas_gbq`, which is "
+                "Could not import libraries `pandas_gbq` or `google.oauth2`, which are "
                 "required to be installed in your environment in order "
                 "to upload data to BigQuery"
             )
 
-        if not ("name" in kwargs and "schema" in kwargs):
-            raise Exception("name and schema need to be defined in kwargs")
+        if not ("name" in kwargs and "schema" in kwargs and "con" in kwargs):
+            raise Exception("name, schema and con need to be defined in kwargs")
 
         gbq_kwargs = {}
         gbq_kwargs["project_id"] = kwargs["con"].engine.url.host
@@ -209,9 +236,3 @@ class BigQueryEngineSpec(BaseEngineSpec):
             if key in kwargs:
                 gbq_kwargs[key] = kwargs[key]
         pandas_gbq.to_gbq(df, **gbq_kwargs)
-
-    @classmethod
-    def get_pandas_dtype(cls, cursor_description: List[tuple]) -> Dict[str, str]:
-        return {
-            col[0]: pandas_dtype_map.get(col[1], "object") for col in cursor_description
-        }

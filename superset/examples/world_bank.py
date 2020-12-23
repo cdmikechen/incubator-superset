@@ -25,25 +25,25 @@ from sqlalchemy.sql import column
 
 from superset import db
 from superset.connectors.sqla.models import SqlMetric
+from superset.models.dashboard import Dashboard
+from superset.models.slice import Slice
 from superset.utils import core as utils
 
 from .helpers import (
     config,
-    Dash,
     EXAMPLES_FOLDER,
     get_example_data,
     get_slice_json,
     merge_slice,
     misc_dash_slices,
-    Slice,
     TBL,
     update_slice_ids,
 )
 
 
-def load_world_bank_health_n_pop(
-    only_metadata=False, force=False
-):  # pylint: disable=too-many-locals
+def load_world_bank_health_n_pop(  # pylint: disable=too-many-locals, too-many-statements
+    only_metadata: bool = False, force: bool = False, sample: bool = False,
+) -> None:
     """Loads the world bank health dataset, slices and a dashboard"""
     tbl_name = "wb_health_population"
     database = utils.get_example_database()
@@ -53,18 +53,26 @@ def load_world_bank_health_n_pop(
         data = get_example_data("countries.json.gz")
         pdf = pd.read_json(data)
         pdf.columns = [col.replace(".", "_") for col in pdf.columns]
-        pdf.year = pd.to_datetime(pdf.year)
+        if database.backend == "presto":
+            pdf.year = pd.to_datetime(pdf.year)
+            pdf.year = pdf.year.dt.strftime("%Y-%m-%d %H:%M%:%S")
+        else:
+            pdf.year = pd.to_datetime(pdf.year)
+        pdf = pdf.head(100) if sample else pdf
+
         pdf.to_sql(
             tbl_name,
             database.get_sqla_engine(),
             if_exists="replace",
             chunksize=50,
             dtype={
-                "year": DateTime(),
+                # TODO(bkyryliuk): use TIMESTAMP type for presto
+                "year": DateTime if database.backend != "presto" else String(255),
                 "country_code": String(3),
                 "country_name": String(255),
                 "region": String(255),
             },
+            method="multi",
             index=False,
         )
 
@@ -97,31 +105,33 @@ def load_world_bank_health_n_pop(
     db.session.commit()
     tbl.fetch_metadata()
 
+    metric = "sum__SP_POP_TOTL"
+    metrics = ["sum__SP_POP_TOTL"]
+    secondary_metric = {
+        "aggregate": "SUM",
+        "column": {
+            "column_name": "SP_RUR_TOTL",
+            "optionName": "_col_SP_RUR_TOTL",
+            "type": "DOUBLE",
+        },
+        "expressionType": "SIMPLE",
+        "hasCustomLabel": True,
+        "label": "Rural Population",
+    }
+
     defaults = {
         "compare_lag": "10",
         "compare_suffix": "o10Y",
         "limit": "25",
         "granularity_sqla": "year",
         "groupby": [],
-        "metric": "sum__SP_POP_TOTL",
-        "metrics": ["sum__SP_POP_TOTL"],
         "row_limit": config["ROW_LIMIT"],
         "since": "2014-01-01",
         "until": "2014-01-02",
         "time_range": "2014-01-01 : 2014-01-02",
+        "time_range_endpoints": ["inclusive", "exclusive"],
         "markup_type": "markdown",
         "country_fieldtype": "cca3",
-        "secondary_metric": {
-            "aggregate": "SUM",
-            "column": {
-                "column_name": "SP_RUR_TOTL",
-                "optionName": "_col_SP_RUR_TOTL",
-                "type": "DOUBLE",
-            },
-            "expressionType": "SIMPLE",
-            "hasCustomLabel": True,
-            "label": "Rural Population",
-        },
         "entity": "country_code",
         "show_bubbles": True,
     }
@@ -144,7 +154,7 @@ def load_world_bank_health_n_pop(
                         "column": "region",
                         "key": "2s98dfu",
                         "metric": "sum__SP_POP_TOTL",
-                        "multiple": True,
+                        "multiple": False,
                     },
                     {
                         "asc": False,
@@ -207,6 +217,7 @@ def load_world_bank_health_n_pop(
                 viz_type="world_map",
                 metric="sum__SP_RUR_TOTL_ZS",
                 num_period_compare="10",
+                secondary_metric=secondary_metric,
             ),
         ),
         Slice(
@@ -247,7 +258,7 @@ def load_world_bank_health_n_pop(
                             "AMA",
                             "PLW",
                         ],
-                        "operator": "not in",
+                        "operator": "NOT IN",
                         "subject": "country_code",
                     }
                 ],
@@ -263,7 +274,9 @@ def load_world_bank_health_n_pop(
                 viz_type="sunburst",
                 groupby=["region", "country_name"],
                 since="2011-01-01",
-                until="2011-01-01",
+                until="2011-01-02",
+                metric=metric,
+                secondary_metric=secondary_metric,
             ),
         ),
         Slice(
@@ -277,6 +290,7 @@ def load_world_bank_health_n_pop(
                 until="now",
                 viz_type="area",
                 groupby=["region"],
+                metrics=metrics,
             ),
         ),
         Slice(
@@ -292,6 +306,7 @@ def load_world_bank_health_n_pop(
                 x_ticks_layout="staggered",
                 viz_type="box_plot",
                 groupby=["region"],
+                metrics=metrics,
             ),
         ),
         Slice(
@@ -316,7 +331,7 @@ def load_world_bank_health_n_pop(
             params=get_slice_json(
                 defaults,
                 since="2011-01-01",
-                until="2011-01-01",
+                until="2012-01-01",
                 viz_type="para",
                 limit=100,
                 metrics=["sum__SP_POP_TOTL", "sum__SP_RUR_TOTL_ZS", "sum__SH_DYN_AIDS"],
@@ -332,10 +347,10 @@ def load_world_bank_health_n_pop(
     print("Creating a World's Health Bank dashboard")
     dash_name = "World Bank's Data"
     slug = "world_health"
-    dash = db.session.query(Dash).filter_by(slug=slug).first()
+    dash = db.session.query(Dashboard).filter_by(slug=slug).first()
 
     if not dash:
-        dash = Dash()
+        dash = Dashboard()
     dash.published = True
     js = textwrap.dedent(
         """\

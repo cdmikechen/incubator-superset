@@ -17,22 +17,22 @@
 from unittest import mock, skipUnless
 
 import pandas as pd
+from sqlalchemy import types
 from sqlalchemy.engine.result import RowProxy
 from sqlalchemy.sql import select
 
 from superset.db_engine_specs.presto import PrestoEngineSpec
-from tests.db_engine_specs.base_tests import DbEngineSpecTestCase
+from superset.sql_parse import ParsedQuery
+from tests.db_engine_specs.base_tests import TestDbEngineSpec
 
 
-class PrestoTests(DbEngineSpecTestCase):
-    @skipUnless(
-        DbEngineSpecTestCase.is_module_installed("pyhive"), "pyhive not installed"
-    )
+class TestPrestoDbEngineSpec(TestDbEngineSpec):
+    @skipUnless(TestDbEngineSpec.is_module_installed("pyhive"), "pyhive not installed")
     def test_get_datatype_presto(self):
         self.assertEqual("STRING", PrestoEngineSpec.get_datatype("string"))
 
     def test_presto_get_view_names_return_empty_list(
-        self
+        self,
     ):  # pylint: disable=invalid-name
         self.assertEqual(
             [], PrestoEngineSpec.get_view_names(mock.ANY, mock.ANY, mock.ANY)
@@ -216,9 +216,9 @@ class PrestoTests(DbEngineSpecTestCase):
                 "name": "row_column",
                 "type": "ROW(NESTED_OBJ1 VARCHAR, NESTED_ROW ROW(NESTED_OBJ2 VARCHAR))",
             },
+            {"name": "row_column.nested_obj1", "type": "VARCHAR"},
             {"name": "row_column.nested_row", "type": "ROW(NESTED_OBJ2 VARCHAR)"},
             {"name": "row_column.nested_row.nested_obj2", "type": "VARCHAR"},
-            {"name": "row_column.nested_obj1", "type": "VARCHAR"},
         ]
         expected_data = [
             {
@@ -435,3 +435,96 @@ class PrestoTests(DbEngineSpecTestCase):
             }
         ]
         self.assertEqual(formatted_cost, expected)
+
+    @mock.patch.dict(
+        "superset.extensions.feature_flag_manager._feature_flags",
+        {"PRESTO_EXPAND_DATA": True},
+        clear=True,
+    )
+    def test_presto_expand_data_array(self):
+        cols = [
+            {"name": "event_id", "type": "VARCHAR", "is_date": False},
+            {"name": "timestamp", "type": "BIGINT", "is_date": False},
+            {
+                "name": "user",
+                "type": "ROW(ID BIGINT, FIRST_NAME VARCHAR, LAST_NAME VARCHAR)",
+                "is_date": False,
+            },
+        ]
+        data = [
+            {
+                "event_id": "abcdef01-2345-6789-abcd-ef0123456789",
+                "timestamp": "1595895506219",
+                "user": '[1, "JOHN", "DOE"]',
+            }
+        ]
+        actual_cols, actual_data, actual_expanded_cols = PrestoEngineSpec.expand_data(
+            cols, data
+        )
+        expected_cols = [
+            {"name": "event_id", "type": "VARCHAR", "is_date": False},
+            {"name": "timestamp", "type": "BIGINT", "is_date": False},
+            {
+                "name": "user",
+                "type": "ROW(ID BIGINT, FIRST_NAME VARCHAR, LAST_NAME VARCHAR)",
+                "is_date": False,
+            },
+            {"name": "user.id", "type": "BIGINT"},
+            {"name": "user.first_name", "type": "VARCHAR"},
+            {"name": "user.last_name", "type": "VARCHAR"},
+        ]
+        expected_data = [
+            {
+                "event_id": "abcdef01-2345-6789-abcd-ef0123456789",
+                "timestamp": "1595895506219",
+                "user": [1, "JOHN", "DOE"],
+                "user.id": 1,
+                "user.first_name": "JOHN",
+                "user.last_name": "DOE",
+            }
+        ]
+        expected_expanded_cols = [
+            {"name": "user.id", "type": "BIGINT"},
+            {"name": "user.first_name", "type": "VARCHAR"},
+            {"name": "user.last_name", "type": "VARCHAR"},
+        ]
+
+        self.assertEqual(actual_cols, expected_cols)
+        self.assertEqual(actual_data, expected_data)
+        self.assertEqual(actual_expanded_cols, expected_expanded_cols)
+
+    def test_get_sqla_column_type(self):
+        sqla_type = PrestoEngineSpec.get_sqla_column_type("varchar(255)")
+        assert isinstance(sqla_type, types.VARCHAR)
+        assert sqla_type.length == 255
+
+        sqla_type = PrestoEngineSpec.get_sqla_column_type("varchar")
+        assert isinstance(sqla_type, types.String)
+        assert sqla_type.length is None
+
+        sqla_type = PrestoEngineSpec.get_sqla_column_type("char(10)")
+        assert isinstance(sqla_type, types.CHAR)
+        assert sqla_type.length == 10
+
+        sqla_type = PrestoEngineSpec.get_sqla_column_type("char")
+        assert isinstance(sqla_type, types.CHAR)
+        assert sqla_type.length is None
+
+        sqla_type = PrestoEngineSpec.get_sqla_column_type("integer")
+        assert isinstance(sqla_type, types.Integer)
+
+        sqla_type = PrestoEngineSpec.get_sqla_column_type(None)
+        assert sqla_type is None
+
+
+def test_is_readonly():
+    def is_readonly(sql: str) -> bool:
+        return PrestoEngineSpec.is_readonly_query(ParsedQuery(sql))
+
+    assert not is_readonly("SET hivevar:desc='Legislators'")
+    assert not is_readonly("UPDATE t1 SET col1 = NULL")
+    assert not is_readonly("INSERT OVERWRITE TABLE tabB SELECT a.Age FROM TableA")
+    assert is_readonly("SHOW LOCKS test EXTENDED")
+    assert is_readonly("EXPLAIN SELECT 1")
+    assert is_readonly("SELECT 1")
+    assert is_readonly("WITH (SELECT 1) bla SELECT * from bla")

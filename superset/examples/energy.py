@@ -23,12 +23,15 @@ from sqlalchemy.sql import column
 
 from superset import db
 from superset.connectors.sqla.models import SqlMetric
+from superset.models.slice import Slice
 from superset.utils import core as utils
 
-from .helpers import get_example_data, merge_slice, misc_dash_slices, Slice, TBL
+from .helpers import get_example_data, merge_slice, misc_dash_slices, TBL
 
 
-def load_energy(only_metadata=False, force=False):
+def load_energy(
+    only_metadata: bool = False, force: bool = False, sample: bool = False
+) -> None:
     """Loads an energy related dataset to use with sankey and graphs"""
     tbl_name = "energy_usage"
     database = utils.get_example_database()
@@ -37,6 +40,7 @@ def load_energy(only_metadata=False, force=False):
     if not only_metadata and (not table_exists or force):
         data = get_example_data("energy.json.gz")
         pdf = pd.read_json(data)
+        pdf = pdf.head(100) if sample else pdf
         pdf.to_sql(
             tbl_name,
             database.get_sqla_engine(),
@@ -44,6 +48,7 @@ def load_energy(only_metadata=False, force=False):
             chunksize=500,
             dtype={"source": String(255), "target": String(255), "value": Float()},
             index=False,
+            method="multi",
         )
 
     print("Creating table [wb_health_population] reference")

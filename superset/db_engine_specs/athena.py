@@ -18,12 +18,14 @@ from datetime import datetime
 from typing import Optional
 
 from superset.db_engine_specs.base import BaseEngineSpec
+from superset.utils import core as utils
 
 
 class AthenaEngineSpec(BaseEngineSpec):
     engine = "awsathena"
+    engine_name = "Amazon Athena"
 
-    _time_grain_functions = {
+    _time_grain_expressions = {
         None: "{col}",
         "PT1S": "date_trunc('second', CAST({col} AS TIMESTAMP))",
         "PT1M": "date_trunc('minute', CAST({col} AS TIMESTAMP))",
@@ -42,10 +44,11 @@ class AthenaEngineSpec(BaseEngineSpec):
     @classmethod
     def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
-        if tt == "DATE":
+        if tt == utils.TemporalType.DATE:
             return f"from_iso8601_date('{dttm.date().isoformat()}')"
-        if tt == "TIMESTAMP":
-            return f"""from_iso8601_timestamp('{dttm.isoformat(timespec="microseconds")}')"""  # pylint: disable=line-too-long
+        if tt == utils.TemporalType.TIMESTAMP:
+            datetime_formatted = dttm.isoformat(timespec="microseconds")
+            return f"""from_iso8601_timestamp('{datetime_formatted}')"""
         return None
 
     @classmethod

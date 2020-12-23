@@ -19,7 +19,7 @@ under the License.
 
 # Getting Started with Superset using Docker
 
-Docker is an easy way to get started with Superset. 
+Docker is an easy way to get started with Superset.
 
 ## Prerequisites
 
@@ -28,14 +28,26 @@ Docker is an easy way to get started with Superset.
 
 ## Configuration
 
-The `/app/pythonpath` folder is mounted from [./docker/pythonpath_dev](./docker/pythonpath_dev) 
-which contains a base configuration [./docker/pythonpath/superset_config.py](./docker/pythonpath/superset_config.py) 
+The `/app/pythonpath` folder is mounted from [./docker/pythonpath_dev](./docker/pythonpath_dev)
+which contains a base configuration [./docker/pythonpath_dev/superset_config.py](./docker/pythonpath_dev/superset_config.py)
 intended for use with local development.
 
 ### Local overrides
 
-In order to override configuration settings locally, simply make a copy of [./docker/pythonpath/superset_config_local.example](./docker/pythonpath/superset_config_local.example)
-into [./docker/pythonpath/superset_config_docker.py](./docker/pythonpath/superset_config_docker.py) (git ignored) and fill in your overrides.
+In order to override configuration settings locally, simply make a copy of [./docker/pythonpath_dev/superset_config_local.example](./docker/pythonpath_dev/superset_config_local.example)
+into [./docker/pythonpath_dev/superset_config_docker.py](./docker/pythonpath_dev/superset_config_docker.py) (git ignored) and fill in your overrides.
+
+### Local packages
+
+If you want to add python packages in order to test things like DBs locally, you can simply add a local requirements.txt (./docker/requirements-local.txt)
+and rebuild your docker stack.
+
+Steps:
+    1. Create ./docker/requirements-local.txt
+    2. Add your new packages
+    3. Rebuild docker-compose
+        a. `docker-compose down -v`
+        b. `docker-compose up`
 
 ## Initializing Database
 
@@ -50,7 +62,7 @@ To run the container, simply run:
 docker-compose up
 ```
 
-After several minutes for superset initialization to finish, you can open a browser and view [`http://localhost:8088`](http://localhost:8088) 
+After several minutes for superset initialization to finish, you can open a browser and view [`http://localhost:8088`](http://localhost:8088)
 to start your journey.
 
 ## Developing
