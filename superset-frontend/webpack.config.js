@@ -50,7 +50,7 @@ const isDevMode = mode !== 'production';
 
 const output = {
   path: BUILD_DIR,
-  publicPath: '/static/assets/', // necessary for lazy-loaded chunks
+  publicPath: '/superset/static/assets/', // necessary for lazy-loaded chunks
 };
 if (isDevMode) {
   output.filename = '[name].[hash:8].entry.js';

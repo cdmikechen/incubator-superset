@@ -51,12 +51,15 @@ logger = logging.getLogger(__name__)
 
 
 def create_app() -> Flask:
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path="/superset/static")
 
     try:
         # Allow user to override our config completely
         config_module = os.environ.get("SUPERSET_CONFIG", "superset.config")
         app.config.from_object(config_module)
+
+        app.add_url_rule(
+           "/superset/static/appbuilder/<path:filename>", endpoint="appbuilder.static")
 
         app_initializer = app.config.get("APP_INITIALIZER", SupersetAppInitializer)(app)
         app_initializer.init_app()

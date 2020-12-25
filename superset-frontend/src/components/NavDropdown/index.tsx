@@ -35,7 +35,7 @@ const NavDropdown = styled(ReactBootstrapNavDropdown)`
     content: '';
     height: ${({ theme }) => theme.gridUnit * 6}px;
     width: ${({ theme }) => theme.gridUnit * 6}px;
-    background: url('/static/assets/images/icons/triangle_down.svg');
+    background: url('/superset/static/assets/images/icons/triangle_down.svg');
     background-size: contain;
     background-position: center center;
     background-repeat: no-repeat;

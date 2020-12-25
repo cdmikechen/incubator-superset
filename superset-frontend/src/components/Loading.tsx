@@ -46,7 +46,7 @@ export default function Loading({ position = 'floating' }: Props) {
     <LoaderImg
       className={`loading ${position}`}
       alt="Loading..."
-      src="/static/assets/images/loading.gif"
+      src="/superset/static/assets/images/loading.gif"
     />
   );
 }
