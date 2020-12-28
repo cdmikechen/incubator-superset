@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-export const DASHBOARD_LIST = '/dashboard/list/';
+export const DASHBOARD_LIST = '/superset/dashboards/list/';

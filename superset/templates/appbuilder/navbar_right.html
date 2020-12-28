@@ -23,6 +23,7 @@
 {% set documentation_icon = appbuilder.app.config['DOCUMENTATION_ICON'] %}
 {% set version_string = appbuilder.app.config['VERSION_STRING'] %}
 {% set version_sha = appbuilder.app.config['VERSION_SHA'] %}
+{% set superset_url_prefix = appbuilder.app.config['SUPERSET_URL_PREFIX'] %}
 
 {% set locale = session['locale'] %}
 {% if not locale %}
@@ -35,9 +36,9 @@
           <i class="fa fa-plus"></i> {{ _("New") }}
         </button>
         <ul class="dropdown-menu">
-            <li><a href="/superset/sqllab"><span class="fa fa-fw fa-search"></span> {{_("SQL Query")}}</a></li>
-            <li><a href="/chart/add"><span class="fa fa-fw fa-bar-chart"></span> {{_("Chart")}}</a></li>
-            <li><a href="/dashboard/new/"><span class="fa fa-fw fa-dashboard"></span> {{_("Dashboard")}}</a></li>
+            <li><a href="{{superset_url_prefix}}/sqllab"><span class="fa fa-fw fa-search"></span> {{_("SQL Query")}}</a></li>
+            <li><a href="{{superset_url_prefix}}/charts/add"><span class="fa fa-fw fa-bar-chart"></span> {{_("Chart")}}</a></li>
+            <li><a href="{{superset_url_prefix}}/dashboards/new/"><span class="fa fa-fw fa-dashboard"></span> {{_("Dashboard")}}</a></li>
         </ul>
     </li>
 {% endif %}

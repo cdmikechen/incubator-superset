@@ -36,6 +36,7 @@ from superset.sql_parse import Table
 from superset.typing import FlaskResponse
 from superset.utils import core as utils
 from superset.views.base import DeleteMixin, SupersetModelView, YamlExportMixin
+from superset.app import SUPERSET_URL_PREFIX
 
 from .forms import CsvToDatabaseForm, ExcelToDatabaseForm
 from .mixins import DatabaseMixin
@@ -105,6 +106,7 @@ class DatabaseView(
 
 
 class CsvToDatabaseView(SimpleFormView):
+    route_base = SUPERSET_URL_PREFIX + "/csvtodatabaseview"
     form = CsvToDatabaseForm
     form_template = "superset/form_view/csv_to_database_view/edit.html"
     form_title = _("CSV to Database configuration")
@@ -132,7 +134,7 @@ class CsvToDatabaseView(SimpleFormView):
                 schema_name=csv_table.schema,
             )
             flash(message, "danger")
-            return redirect("/csvtodatabaseview/form")
+            return redirect(f"{SUPERSET_URL_PREFIX}/csvtodatabaseview/form")
 
         if "." in csv_table.table and csv_table.schema:
             message = _(
@@ -143,7 +145,7 @@ class CsvToDatabaseView(SimpleFormView):
                 schema=csv_table.schema,
             )
             flash(message, "danger")
-            return redirect("/csvtodatabaseview/form")
+            return redirect(f"{SUPERSET_URL_PREFIX}/csvtodatabaseview/form")
 
         uploaded_tmp_file_path = tempfile.NamedTemporaryFile(
             dir=app.config["UPLOAD_FOLDER"],
@@ -248,7 +250,7 @@ class CsvToDatabaseView(SimpleFormView):
 
             flash(message, "danger")
             stats_logger.incr("failed_csv_upload")
-            return redirect("/csvtodatabaseview/form")
+            return redirect(f"{SUPERSET_URL_PREFIX}/csvtodatabaseview/form")
 
         os.remove(uploaded_tmp_file_path)
         # Go back to welcome page / splash screen
@@ -261,10 +263,11 @@ class CsvToDatabaseView(SimpleFormView):
         )
         flash(message, "info")
         stats_logger.incr("successful_csv_upload")
-        return redirect("/tablemodelview/list/")
+        return redirect(f"{SUPERSET_URL_PREFIX}/tablemodelviews/list/")
 
 
 class ExcelToDatabaseView(SimpleFormView):
+    route_base = SUPERSET_URL_PREFIX + "/exceltodatabaseview"
     form = ExcelToDatabaseForm
     form_template = "superset/form_view/excel_to_database_view/edit.html"
     form_title = _("Excel to Database configuration")
@@ -289,7 +292,7 @@ class ExcelToDatabaseView(SimpleFormView):
                 schema_name=excel_table.schema,
             )
             flash(message, "danger")
-            return redirect("/exceltodatabaseview/form")
+            return redirect(f"{SUPERSET_URL_PREFIX}/exceltodatabaseviews/form")
 
         if "." in excel_table.table and excel_table.schema:
             message = _(
@@ -300,7 +303,7 @@ class ExcelToDatabaseView(SimpleFormView):
                 schema=excel_table.schema,
             )
             flash(message, "danger")
-            return redirect("/exceltodatabaseview/form")
+            return redirect(f"{SUPERSET_URL_PREFIX}/exceltodatabaseviews/form")
 
         uploaded_tmp_file_path = tempfile.NamedTemporaryFile(
             dir=app.config["UPLOAD_FOLDER"],
@@ -400,7 +403,7 @@ class ExcelToDatabaseView(SimpleFormView):
 
             flash(message, "danger")
             stats_logger.incr("failed_excel_upload")
-            return redirect("/exceltodatabaseview/form")
+            return redirect(f"{SUPERSET_URL_PREFIX}/exceltodatabaseviews/form")
 
         os.remove(uploaded_tmp_file_path)
         # Go back to welcome page / splash screen
@@ -413,4 +416,4 @@ class ExcelToDatabaseView(SimpleFormView):
         )
         flash(message, "info")
         stats_logger.incr("successful_excel_upload")
-        return redirect("/tablemodelview/list/")
+        return redirect(f"{SUPERSET_URL_PREFIX}/tablemodelviews/list/")

@@ -23,7 +23,7 @@ from typing import Any, Callable, cast, Dict, List, Optional, TYPE_CHECKING, Uni
 
 import simplejson as json
 import yaml
-from flask import abort, flash, g, get_flashed_messages, redirect, Response, session
+from flask import abort, flash, g, get_flashed_messages, redirect, Response, session, Blueprint
 from flask_appbuilder import BaseView, Model, ModelView
 from flask_appbuilder.actions import action
 from flask_appbuilder.forms import DynamicForm
@@ -57,6 +57,7 @@ from superset.models.helpers import ImportMixin
 from superset.translations.utils import get_language_pack
 from superset.typing import FlaskResponse
 from superset.utils import core as utils
+from superset.app import SUPERSET_URL_PREFIX
 
 from .utils import bootstrap_user_data
 
@@ -66,6 +67,7 @@ if TYPE_CHECKING:
     )
 
 FRONTEND_CONF_KEYS = (
+    "SUPERSET_URL_PREFIX",
     "SUPERSET_WEBSERVER_TIMEOUT",
     "SUPERSET_DASHBOARD_POSITION_DATA_LIMIT",
     "SUPERSET_DASHBOARD_PERIODICAL_REFRESH_LIMIT",
@@ -254,6 +256,15 @@ class BaseSupersetView(BaseView):
             mimetype="application/json",
         )
 
+    def create_blueprint(self, appbuilder, endpoint=None, static_folder=None):
+        if self.route_base is None:
+            self.route_base = "/" + self.__class__.__name__.lower()
+        if not self.route_base.startswith(SUPERSET_URL_PREFIX):
+            self.route_base = SUPERSET_URL_PREFIX + self.route_base
+        logger.debug("register app %s", self.route_base)
+
+        return super(BaseSupersetView, self).create_blueprint(appbuilder, endpoint, static_folder)
+
 
 def menu_data() -> Dict[str, Any]:
     menu = appbuilder.menu.get_data()
@@ -350,6 +361,15 @@ class SupersetModelView(ModelView):
                 payload, default=utils.pessimistic_json_iso_dttm_ser
             ),
         )
+
+    def create_blueprint(self, appbuilder, endpoint=None, static_folder=None):
+        if self.route_base is None:
+            self.route_base = SUPERSET_URL_PREFIX + "/" + self.__class__.__name__.lower()
+        elif not self.route_base.startswith(SUPERSET_URL_PREFIX):
+            self.route_base = SUPERSET_URL_PREFIX + self.route_base
+        logger.debug("register app %s", self.route_base)
+
+        return super(SupersetModelView, self).create_blueprint(appbuilder, endpoint, static_folder)
 
 
 class ListWidgetWithCheckboxes(ListWidget):  # pylint: disable=too-few-public-methods

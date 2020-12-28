@@ -51,6 +51,8 @@ const menu = { ...bootstrap.common.menu_data };
 const common = { ...bootstrap.common };
 initFeatureFlags(bootstrap.common.feature_flags);
 
+export const superset_url_prefix: string = common.conf.SUPERSET_URL_PREFIX
+
 const store = createStore(
   combineReducers({
     messageToasts: messageToastReducer,
@@ -72,27 +74,27 @@ const App = () => (
                   <Welcome user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/dashboard/list/">
+              <Route path="/superset/dashboards/list/">
                 <ErrorBoundary>
                   <DashboardList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/chart/list/">
+              <Route path="/superset/charts/list/">
                 <ErrorBoundary>
                   <ChartList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/tablemodelview/list/">
+              <Route path="/superset/tablemodelviews/list/">
                 <ErrorBoundary>
                   <DatasetList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/databaseview/list/">
+              <Route path="/superset/databaseviews/list/">
                 <ErrorBoundary>
                   <DatabaseList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/savedqueryview/list/">
+              <Route path="/superset/savedqueryviews/list/">
                 <ErrorBoundary>
                   <SavedQueryList user={user} />
                 </ErrorBoundary>

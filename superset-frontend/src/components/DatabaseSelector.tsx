@@ -24,6 +24,7 @@ import Label from 'src/components/Label';
 
 import SupersetAsyncSelect from './AsyncSelect';
 import RefreshLabel from './RefreshLabel';
+import {superset_url_prefix} from 'src/views/App'
 
 const FieldTitle = styled.p`
   color: ${({ theme }) => theme.colors.secondary.light2};
@@ -104,7 +105,7 @@ export default function DatabaseSelector({
       const queryParams = rison.encode({
         force: Boolean(forceRefresh),
       });
-      const endpoint = `/api/v1/database/${actualDbId}/schemas/?q=${queryParams}`;
+      const endpoint = `${superset_url_prefix}/api/v1/database/${actualDbId}/schemas/?q=${queryParams}`;
       return SupersetClient.get({ endpoint })
         .then(({ json }) => {
           const options = json.result.map((s: string) => ({
@@ -220,7 +221,7 @@ export default function DatabaseSelector({
     return renderSelectRow(
       <SupersetAsyncSelect
         data-test="select-database"
-        dataEndpoint={`/api/v1/database/?q=${queryParams}`}
+        dataEndpoint={`${superset_url_prefix}/api/v1/database/?q=${queryParams}`}
         onChange={(db: any) => changeDataBase(db)}
         onAsyncError={() =>
           handleError(t('Error while fetching database list'))

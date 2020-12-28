@@ -22,6 +22,7 @@ import { debounce } from 'lodash';
 import ListView, { FetchDataConfig } from 'src/components/ListView';
 import withToasts from 'src/messageToasts/enhancers/withToasts';
 import { Dashboard } from 'src/types/bootstrapTypes';
+import {superset_url_prefix} from 'src/views/App'
 
 const PAGE_SIZE = 25;
 
@@ -141,7 +142,7 @@ class DashboardTable extends React.PureComponent<
     });
 
     return SupersetClient.get({
-      endpoint: `/api/v1/dashboard/?q=${queryParams}`,
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/?q=${queryParams}`,
     })
       .then(({ json }) => {
         this.setState({ dashboards: json.result, dashboard_count: json.count });

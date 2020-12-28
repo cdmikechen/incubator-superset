@@ -24,6 +24,7 @@ from flask import Flask, redirect
 from flask_appbuilder import expose, IndexView
 from flask_babel import gettext as __, lazy_gettext as _
 from flask_compress import Compress
+from werkzeug.utils import import_string
 
 from superset.connectors.connector_registry import ConnectorRegistry
 from superset.extensions import (
@@ -49,17 +50,26 @@ from superset.utils.log import DBEventLogger, get_event_logger_from_cfg_value
 
 logger = logging.getLogger(__name__)
 
+SUPERSET_URL_PREFIX = "/superset"
 
 def create_app() -> Flask:
-    app = Flask(__name__, static_url_path="/superset/static")
-
     try:
         # Allow user to override our config completely
         config_module = os.environ.get("SUPERSET_CONFIG", "superset.config")
+        config = import_string(config_module)
+        SUPERSET_URL_PREFIX = getattr(config, "SUPERSET_URL_PREFIX", "/superset")
+
+        app = Flask(__name__, static_url_path=SUPERSET_URL_PREFIX + "/static")
         app.config.from_object(config_module)
+        # SUPERSET_URL_PREFIX = app.config.get("SUPERSET_URL_PREFIX", "/superset")
 
         app.add_url_rule(
-           "/superset/static/appbuilder/<path:filename>", endpoint="appbuilder.static")
+            SUPERSET_URL_PREFIX + "/static/appbuilder/<path:filename>", endpoint="appbuilder.static")
+        if app.config.get("FAB_ADD_SECURITY_VIEWS", True) and app.config.get("FAB_API_SWAGGER_UI", False):
+            app.add_url_rule(
+                SUPERSET_URL_PREFIX + "/swagger/<version>", endpoint="SwaggerView.show")
+            app.add_url_rule(
+                SUPERSET_URL_PREFIX + "/api/<version>/_openapi", endpoint="OpenApi.get")
 
         app_initializer = app.config.get("APP_INITIALIZER", SupersetAppInitializer)(app)
         app_initializer.init_app()
@@ -231,7 +241,7 @@ class SupersetAppInitializer:
         appbuilder.add_link(
             "Datasets",
             label=__("Datasets"),
-            href="/tablemodelview/list/?_flt_1_is_sqllab_view=y",
+            href=SUPERSET_URL_PREFIX + "/tablemodelview/list/?_flt_1_is_sqllab_view=y",
             icon="fa-table",
             category="Data",
             category_label=__("Data"),
@@ -326,7 +336,7 @@ class SupersetAppInitializer:
         )
         appbuilder.add_link(
             __("Saved Queries"),
-            href="/sqllab/my_queries/",
+            href=SUPERSET_URL_PREFIX + "/sqllab/my_queries/",
             icon="fa-save",
             category="SQL Lab",
         )
@@ -345,7 +355,7 @@ class SupersetAppInitializer:
             appbuilder.add_link(
                 "Upload a CSV",
                 label=__("Upload a CSV"),
-                href="/csvtodatabaseview/form",
+                href=SUPERSET_URL_PREFIX + "/csvtodatabaseview/form",
                 icon="fa-upload",
                 category="Data",
                 category_label=__("Data"),
@@ -360,7 +370,7 @@ class SupersetAppInitializer:
                 appbuilder.add_link(
                     "Upload Excel",
                     label=__("Upload Excel"),
-                    href="/exceltodatabaseview/form",
+                    href=SUPERSET_URL_PREFIX + "/exceltodatabaseview/form",
                     icon="fa-upload",
                     category="Data",
                     category_label=__("Data"),

@@ -53,6 +53,7 @@ from superset.utils.dashboard_filter_scopes_converter import (
     copy_filter_scopes,
 )
 from superset.utils.urls import get_url_path
+from superset.app import SUPERSET_URL_PREFIX
 
 if TYPE_CHECKING:
     from superset.connectors.base.models import BaseDatasource
@@ -209,7 +210,7 @@ class Dashboard(  # pylint: disable=too-many-instance-attributes
         Returns a thumbnail URL with a HEX digest. We want to avoid browser cache
         if the dashboard has changed
         """
-        return f"/api/v1/dashboard/{self.id}/thumbnail/{self.digest}/"
+        return f"{SUPERSET_URL_PREFIX}/api/v1/dashboard/{self.id}/thumbnail/{self.digest}/"
 
     @property
     def changed_by_name(self) -> str:

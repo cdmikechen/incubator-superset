@@ -39,6 +39,7 @@ from superset.sql_lab import Query as SqllabQuery
 from superset.stats_logger import BaseStatsLogger
 from superset.typing import FlaskResponse
 from superset.utils.core import time_function
+from superset.app import SUPERSET_URL_PREFIX
 
 logger = logging.getLogger(__name__)
 get_related_schema = {
@@ -213,6 +214,14 @@ class BaseSupersetModelRestApi(ModelRestApi):
         self, appbuilder: AppBuilder, *args: Any, **kwargs: Any
     ) -> Blueprint:
         self.stats_logger = self.appbuilder.get_app.config["STATS_LOGGER"]
+        self._init_model_schemas()
+        if self.route_base is None:
+            self.route_base = SUPERSET_URL_PREFIX + "/api/{}/{}".format(
+                self.version, self.resource_name.lower()
+            )
+        if not self.route_base.startswith(SUPERSET_URL_PREFIX):
+            self.route_base = SUPERSET_URL_PREFIX + self.route_base
+        logger.debug("register rest api %s", self.route_base)
         return super().create_blueprint(appbuilder, *args, **kwargs)
 
     def _init_properties(self) -> None:

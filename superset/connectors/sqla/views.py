@@ -46,6 +46,7 @@ from superset.views.base import (
     validate_sqlatable,
     YamlExportMixin,
 )
+from superset.app import SUPERSET_URL_PREFIX
 
 logger = logging.getLogger(__name__)
 
@@ -554,7 +555,7 @@ class TableModelView(  # pylint: disable=too-many-ancestors
             )
             flash(failure_msg, "danger")
 
-        return redirect("/tablemodelview/list/")
+        return redirect(SUPERSET_URL_PREFIX + "/tablemodelview/list/")
 
     @expose("/list/")
     @has_access

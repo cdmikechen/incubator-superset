@@ -52,6 +52,11 @@ if TYPE_CHECKING:
 
     from superset.models.core import Database  # pylint: disable=unused-import
 
+
+# 定义superset的url前缀
+SUPERSET_URL_PREFIX = "/superset"
+
+
 # Realtime stats logger, a StatsD implementation exists
 STATS_LOGGER = DummyStatsLogger()
 EVENT_LOGGER = DBEventLogger()
@@ -79,7 +84,7 @@ PACKAGE_JSON_FILE = os.path.join(BASE_DIR, "static", "assets", "package.json")
 #     "type": "image/png"
 #     "rel": "icon"
 # },
-FAVICONS = [{"href": "/static/assets/images/favicon.png"}]
+FAVICONS = [{"href": SUPERSET_URL_PREFIX + "/static/assets/images/favicon.png"}]
 
 
 def _try_json_readversion(filepath: str) -> Optional[str]:

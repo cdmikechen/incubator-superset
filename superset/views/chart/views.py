@@ -38,7 +38,7 @@ from superset.views.chart.mixin import SliceMixin
 class SliceModelView(
     SliceMixin, SupersetModelView, DeleteMixin
 ):  # pylint: disable=too-many-ancestors
-    route_base = "/chart"
+    route_base = "/charts"
     datamodel = SQLAInterface(Slice)
     include_route_methods = RouteMethod.CRUD_SET | {
         RouteMethod.DOWNLOAD,

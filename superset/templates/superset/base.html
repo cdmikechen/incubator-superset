@@ -18,10 +18,11 @@
 #}
 {% extends "appbuilder/baselayout.html" %}
 {% from 'superset/partials/asset_bundle.html' import css_bundle, js_bundle with context %}
+{% set superset_url_prefix = appbuilder.app.config['SUPERSET_URL_PREFIX'] %}
 
 {% block head_css %}
   {{ super() }}
-  <link rel="icon" type="image/png" href="/static/assets/images/favicon.png">
+  <link rel="icon" type="image/png" href="{{superset_url_prefix}}/static/assets/images/favicon.png">
   {{ css_bundle("theme") }}
 {% endblock %}
 
