@@ -69,32 +69,32 @@ const App = () => (
           <QueryParamProvider ReactRouterRoute={Route}>
             <Menu data={menu} />
             <Switch>
-              <Route path="/superset/welcome/">
+              <Route path={superset_url_prefix + "/welcome/"}>
                 <ErrorBoundary>
                   <Welcome user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/superset/dashboards/list/">
+              <Route path={superset_url_prefix + "/dashboards/list/"}>
                 <ErrorBoundary>
                   <DashboardList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/superset/charts/list/">
+              <Route path={superset_url_prefix + "/charts/list/"}>
                 <ErrorBoundary>
                   <ChartList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/superset/tablemodelviews/list/">
+              <Route path={superset_url_prefix + "/tablemodelviews/list/"}>
                 <ErrorBoundary>
                   <DatasetList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/superset/databaseviews/list/">
+              <Route path={superset_url_prefix + "/databaseviews/list/"}>
                 <ErrorBoundary>
                   <DatabaseList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path="/superset/savedqueryviews/list/">
+              <Route path={superset_url_prefix + "/savedqueryviews/list/"}>
                 <ErrorBoundary>
                   <SavedQueryList user={user} />
                 </ErrorBoundary>

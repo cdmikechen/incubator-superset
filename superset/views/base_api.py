@@ -221,7 +221,7 @@ class BaseSupersetModelRestApi(ModelRestApi):
             )
         if not self.route_base.startswith(SUPERSET_URL_PREFIX):
             self.route_base = SUPERSET_URL_PREFIX + self.route_base
-        logger.debug("register rest api %s", self.route_base)
+        # logger.debug("register rest api %s", self.route_base)
         return super().create_blueprint(appbuilder, *args, **kwargs)
 
     def _init_properties(self) -> None:

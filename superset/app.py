@@ -14,6 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+SUPERSET_URL_PREFIX = "/superset"
 
 import logging
 import os
@@ -50,7 +51,6 @@ from superset.utils.log import DBEventLogger, get_event_logger_from_cfg_value
 
 logger = logging.getLogger(__name__)
 
-SUPERSET_URL_PREFIX = "/superset"
 
 def create_app() -> Flask:
     try:
@@ -61,15 +61,9 @@ def create_app() -> Flask:
 
         app = Flask(__name__, static_url_path=SUPERSET_URL_PREFIX + "/static")
         app.config.from_object(config_module)
-        # SUPERSET_URL_PREFIX = app.config.get("SUPERSET_URL_PREFIX", "/superset")
 
         app.add_url_rule(
             SUPERSET_URL_PREFIX + "/static/appbuilder/<path:filename>", endpoint="appbuilder.static")
-        if app.config.get("FAB_ADD_SECURITY_VIEWS", True) and app.config.get("FAB_API_SWAGGER_UI", False):
-            app.add_url_rule(
-                SUPERSET_URL_PREFIX + "/swagger/<version>", endpoint="SwaggerView.show")
-            app.add_url_rule(
-                SUPERSET_URL_PREFIX + "/api/<version>/_openapi", endpoint="OpenApi.get")
 
         app_initializer = app.config.get("APP_INITIALIZER", SupersetAppInitializer)(app)
         app_initializer.init_app()

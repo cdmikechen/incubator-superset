@@ -261,7 +261,7 @@ class BaseSupersetView(BaseView):
             self.route_base = "/" + self.__class__.__name__.lower()
         if not self.route_base.startswith(SUPERSET_URL_PREFIX):
             self.route_base = SUPERSET_URL_PREFIX + self.route_base
-        logger.debug("register app %s", self.route_base)
+        # logger.debug("register app %s", self.route_base)
 
         return super(BaseSupersetView, self).create_blueprint(appbuilder, endpoint, static_folder)
 
@@ -367,7 +367,7 @@ class SupersetModelView(ModelView):
             self.route_base = SUPERSET_URL_PREFIX + "/" + self.__class__.__name__.lower()
         elif not self.route_base.startswith(SUPERSET_URL_PREFIX):
             self.route_base = SUPERSET_URL_PREFIX + self.route_base
-        logger.debug("register app %s", self.route_base)
+        # logger.debug("register app %s", self.route_base)
 
         return super(SupersetModelView, self).create_blueprint(appbuilder, endpoint, static_folder)
 

@@ -102,19 +102,70 @@ RoleModelView.list_columns = ["name"]
 RoleModelView.edit_columns = ["name", "permissions", "user"]
 RoleModelView.related_views = []
 
+# 自定义权限部分，主要是覆盖前缀
+from flask_appbuilder.security.manager import SecurityApi
+from superset.app import SUPERSET_URL_PREFIX
+from flask_appbuilder.security.views import UserModelView, RegisterUserModelView, RoleModelView
+
+
+class SupersetSecurityApi(SecurityApi):
+    route_base = SUPERSET_URL_PREFIX + "/api/v1/security"
+
+
+class SupersetUserModelView(UserModelView):
+    route_base = SUPERSET_URL_PREFIX + "/users"
+
+
+class SupersetUserDBModelView(SupersetUserModelView):
+    pass
+
+
+class SupersetUserLDAPModelView(SupersetUserModelView):
+    pass
+
+
+class SupersetUserOAuthModelView(SupersetUserModelView):
+    pass
+
+
+class SupersetUserOIDModelView(SupersetUserModelView):
+    pass
+
+
+class SupersetUserRemoteUserModelView(SupersetUserModelView):
+    pass
+
+
+class SupersetRegisterUserModelView(RegisterUserModelView):
+    route_base = SUPERSET_URL_PREFIX + "/registeruser"
+
+
+class SupersetRoleModelView(RoleModelView):
+    route_base = SUPERSET_URL_PREFIX + "/roles"
+
 
 class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
     SecurityManager
 ):
+    security_api = SupersetSecurityApi
     userstatschartview = None
     READ_ONLY_MODEL_VIEWS = {"DatabaseAsync", "DatabaseView", "DruidClusterModelView"}
 
+    userdbmodelview = SupersetUserDBModelView
+    userldapmodelview = SupersetUserLDAPModelView
+    useroidmodelview = SupersetUserOIDModelView
+    useroauthmodelview = SupersetUserOAuthModelView
+    userremoteusermodelview = SupersetUserRemoteUserModelView
+    registerusermodelview = SupersetRegisterUserModelView
+
+    rolemodelview = SupersetRoleModelView
+
     USER_MODEL_VIEWS = {
-        "UserDBModelView",
-        "UserLDAPModelView",
-        "UserOAuthModelView",
-        "UserOIDModelView",
-        "UserRemoteUserModelView",
+        "SupersetUserDBModelView",
+        "SupersetUserLDAPModelView",
+        "SupersetUserOAuthModelView",
+        "SupersetUserOIDModelView",
+        "SupersetUserRemoteUserModelView",
     }
 
     GAMMA_READ_ONLY_MODEL_VIEWS = {

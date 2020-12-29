@@ -131,8 +131,63 @@ class UIManifestProcessor:
         return self.manifest.get(bundle, {}).get(asset_type, [])
 
 
+from flask_appbuilder.babel.views import LocaleView
+from flask_appbuilder.babel.manager import BabelManager
+from flask_appbuilder.api.manager import OpenApi, SwaggerView, OpenApiManager
+from superset.app import SUPERSET_URL_PREFIX
+from superset import app as current_app
+from apispec import APISpec
+from apispec.ext.marshmallow import MarshmallowPlugin
+
+
+class SupersetLocaleView(LocaleView):
+    route_base = SUPERSET_URL_PREFIX + "/lang"
+
+
+class SupersetBabelManager(BabelManager):
+    def register_views(self):
+        self.locale_view = SupersetLocaleView()
+        self.appbuilder.add_view_no_menu(self.locale_view)
+
+
+class SupersetOpenApi(OpenApi):
+    route_base = SUPERSET_URL_PREFIX + "/api"
+
+    @staticmethod
+    def _create_api_spec(version):
+        return APISpec(
+            title=current_app.appbuilder.app_name,
+            version=version,
+            openapi_version="3.0.2",
+            info=dict(description=current_app.appbuilder.app_name),
+            plugins=[MarshmallowPlugin()],
+            servers=[{"url": "{}/api/{}".format(SUPERSET_URL_PREFIX, version)}],
+        )
+
+
+class SupersetSwaggerView(SwaggerView):
+    route_base = SUPERSET_URL_PREFIX + "/swagger"
+    openapi_uri = SUPERSET_URL_PREFIX + "/api/{}/_openapi"
+
+
+class SupersetOpenApiManager(OpenApiManager):
+    def register_views(self):
+        if not self.appbuilder.app.config.get("FAB_ADD_SECURITY_VIEWS", True):
+            return
+        if self.appbuilder.get_app.config.get("FAB_API_SWAGGER_UI", False):
+            self.appbuilder.add_api(SupersetOpenApi)
+            self.appbuilder.add_view_no_menu(SupersetSwaggerView)
+
+
+class SupersetAppBuilder(AppBuilder):
+    def _add_admin_views(self):
+        self.bm = SupersetBabelManager(self)
+        self.openapi_manager = SupersetOpenApiManager(self)
+        super()._add_admin_views()
+
+
 APP_DIR = os.path.dirname(__file__)
-appbuilder = AppBuilder(update_perms=False)
+appbuilder = SupersetAppBuilder(update_perms=False)
 cache_manager = CacheManager()
 celery_app = celery.Celery()
 csrf = CSRFProtect()

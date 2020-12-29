@@ -61,6 +61,8 @@ CELERY_CONFIG = CeleryConfig
 
 import os
 from superset.security import SupersetSecurityManager
+from superset.app import SUPERSET_URL_PREFIX
+
 import logging
 
 from flask_appbuilder.security.views import redirect, expose, AuthOAuthView, logout_user
@@ -68,6 +70,8 @@ from flask import session, url_for
 
 
 class CustomAuthOAuthView(AuthOAuthView):
+
+    route_base = SUPERSET_URL_PREFIX
 
     @expose("/login/")
     @expose("/login/<provider>")
@@ -78,7 +82,7 @@ class CustomAuthOAuthView(AuthOAuthView):
                 provider_name = self.appbuilder.sm.oauth_providers[0]['name']
                 logging.debug("there is one provider, can login direct to {0}"
                               .format(provider_name))
-                return redirect("/login/" + provider_name)
+                return redirect(SUPERSET_URL_PREFIX + "/login/" + provider_name)
         return super(CustomAuthOAuthView, self).login(provider, register)
 
     @expose("/logout/")
