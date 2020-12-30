@@ -277,17 +277,17 @@ BABEL_DEFAULT_LOCALE = "en"
 BABEL_DEFAULT_FOLDER = "superset/translations"
 # The allowed translation for you app
 LANGUAGES = {
-    "en": {"flag": "us", "name": "English"},
-    "es": {"flag": "es", "name": "Spanish"},
-    "it": {"flag": "it", "name": "Italian"},
-    "fr": {"flag": "fr", "name": "French"},
-    "zh": {"flag": "cn", "name": "Chinese"},
-    "ja": {"flag": "jp", "name": "Japanese"},
-    "de": {"flag": "de", "name": "German"},
-    "pt": {"flag": "pt", "name": "Portuguese"},
-    "pt_BR": {"flag": "br", "name": "Brazilian Portuguese"},
-    "ru": {"flag": "ru", "name": "Russian"},
-    "ko": {"flag": "kr", "name": "Korean"},
+    "en": {"flag": "us", "name": "English", "moment_locale": "en"},
+    "es": {"flag": "es", "name": "Spanish", "moment_locale": "es"},
+    "it": {"flag": "it", "name": "Italian", "moment_locale": "it"},
+    "fr": {"flag": "fr", "name": "French", "moment_locale": "fr"},
+    "zh": {"flag": "cn", "name": "Chinese", "moment_locale": "zh-cn"},
+    "ja": {"flag": "jp", "name": "Japanese", "moment_locale": "ja"},
+    "de": {"flag": "de", "name": "German", "moment_locale": "de"},
+    "pt": {"flag": "pt", "name": "Portuguese", "moment_locale": "pt"},
+    "pt_BR": {"flag": "br", "name": "Brazilian Portuguese", "moment_locale": "pt-br"},
+    "ru": {"flag": "ru", "name": "Russian", "moment_locale": "ru"},
+    "ko": {"flag": "kr", "name": "Korean", "moment_locale": "ko"},
 }
 
 # ---------------------------------------------------
