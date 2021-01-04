@@ -6445,3 +6445,19 @@ msgid ""
 "available in the list, "
 "follow the instructions on the how to add it on the "
 msgstr "如果您想要找的数据源不在列表里面，您可以查看如下的介绍来了解如何去添加："
+
+#: superset/app.py:237
+msgid "Datasets"
+msgstr "数据集"
+
+#: superset/app.py:366
+msgid "Upload Excel"
+msgstr "上传Excel"
+
+# superset-frontend/src/components/Menu/MenuObject.tsx:191
+msgid "Settings"
+msgstr "设置"
+
+# superset/templates/appbuilder/general/widgets/search.html:57
+msgid "Refresh"
+msgstr "刷新"

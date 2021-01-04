@@ -42,7 +42,7 @@ export default function NewMenu() {
   return (
     <li className="dropdown">
       <Button buttonStyle="primary" dropdownItems={dropdownItems}>
-        <i className="fa fa-plus" /> New
+        <i className="fa fa-plus" /> {t("New")}
       </Button>
     </li>
   );
