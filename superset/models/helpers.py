@@ -388,7 +388,19 @@ class AuditMixinNullable(AuditMixin):
 
     @property
     def changed_on_humanized(self) -> str:
-        return humanize.naturaltime(datetime.now() - self.changed_on)
+        try:
+            from flask import session as local_session
+            from superset import conf
+            langs = conf.get("LANGUAGES", None)
+            locale = local_session["locale"]
+
+            if "_" in locale:
+                humanize.i18n.activate(locale)
+            elif langs is not None:
+                humanize.i18n.activate("{}_{}".format(locale,
+                                                      langs[locale]["flag"].upper()))
+        finally:
+            return humanize.naturaltime(datetime.now() - self.changed_on)
 
     @renders("changed_on")
     def modified(self) -> Markup:
