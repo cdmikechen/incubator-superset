@@ -127,7 +127,7 @@ class DatasourceControl extends React.PureComponent {
           </div>
           <Row className="datasource-container">
             <Col md={6}>
-              <strong>Columns</strong>
+              <strong>{t('Columns')}</strong>
               {datasource.columns.map(col => (
                 <div key={col.column_name}>
                   <ColumnOption showType column={col} />
@@ -135,7 +135,7 @@ class DatasourceControl extends React.PureComponent {
               ))}
             </Col>
             <Col md={6}>
-              <strong>Metrics</strong>
+              <strong>{t('Metrics')}</strong>
               {datasource.metrics.map(m => (
                 <div key={m.metric_name}>
                   <MetricOption metric={m} showType />

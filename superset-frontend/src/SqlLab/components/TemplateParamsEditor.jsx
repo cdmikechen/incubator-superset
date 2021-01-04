@@ -89,7 +89,7 @@ export default class TemplateParamsEditor extends React.Component {
         >
           Jinja templating
         </a>{' '}
-        syntax.
+        {t('syntax.')}
       </p>
     );
   }

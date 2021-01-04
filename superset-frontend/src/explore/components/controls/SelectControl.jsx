@@ -146,7 +146,7 @@ export default class SelectControl extends React.PureComponent {
         if (Object.is(c)) {
           return c;
         }
-        return { label: c, [props.valueKey]: c };
+        return { label: t(c), [props.valueKey]: c };
       });
     }
     // For FreeFormSelect, insert newly created values into options
@@ -183,11 +183,11 @@ export default class SelectControl extends React.PureComponent {
   }
 
   isMetaSelectAllOption(o) {
-    return o.meta && o.meta === true && o.label === 'Select All';
+    return o.meta && o.meta === true && o.label === t('Select All');
   }
 
   createMetaSelectAllOption() {
-    const option = { label: 'Select All', meta: true };
+    const option = { label: t('Select All'), meta: true };
     option[this.props.valueKey] = 'Select All';
     return option;
   }

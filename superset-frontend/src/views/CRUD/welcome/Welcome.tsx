@@ -100,7 +100,7 @@ export default function Welcome({ user }: WelcomeProps) {
                     type="text"
                     bsSize="sm"
                     style={{ marginTop: '25px' }}
-                    placeholder="Search"
+                    placeholder={t('Search')}
                     value={searchQuery}
                     onChange={onFormControlChange}
                   />

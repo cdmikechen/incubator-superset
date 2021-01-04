@@ -171,7 +171,7 @@ export class DisplayQueryButton extends React.PureComponent {
     }
     if (this.state.data) {
       if (this.state.data.length === 0) {
-        return 'No data';
+        return t('No data');
       }
       return this.renderDataTable(this.state.data);
     }

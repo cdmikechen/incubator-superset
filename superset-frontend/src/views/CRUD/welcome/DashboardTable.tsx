@@ -44,7 +44,7 @@ class DashboardTable extends React.PureComponent<
   columns = [
     {
       accessor: 'dashboard_title',
-      Header: 'Dashboard',
+      Header: t('Dashboard'),
       Cell: ({
         row: {
           original: { url, dashboard_title: dashboardTitle },
@@ -60,7 +60,7 @@ class DashboardTable extends React.PureComponent<
     },
     {
       accessor: 'changed_by.first_name',
-      Header: 'Modified By',
+      Header: t('Modified By'),
       Cell: ({
         row: {
           original: { changed_by_name: changedByName, changedByUrl },
@@ -76,7 +76,7 @@ class DashboardTable extends React.PureComponent<
     },
     {
       accessor: 'changed_on_delta_humanized',
-      Header: 'Modified',
+      Header: t('Modified'),
       Cell: ({
         row: {
           original: { changed_on_delta_humanized: changedOn },

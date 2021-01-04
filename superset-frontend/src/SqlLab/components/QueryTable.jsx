@@ -212,10 +212,21 @@ class QueryTable extends React.PureComponent {
         return q;
       })
       .reverse();
+    let colShow = []
+    this.props.columns.map((col) => {
+      let label = t(col)
+      if (label == col) {
+        label = t(col.charAt(0).toUpperCase() + col.slice(1))
+      }
+      colShow.push({
+        key: col,
+        label: label
+      })
+    });
     return (
       <div className="QueryTable">
         <Table
-          columns={this.props.columns}
+          columns={colShow}
           className="table table-condensed"
           data={data}
           itemsPerPage={50}

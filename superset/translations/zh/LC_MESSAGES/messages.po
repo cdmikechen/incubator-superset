@@ -1406,6 +1406,10 @@ msgstr "数据源"
 msgid "Modified"
 msgstr "已修改"
 
+#superset-frontend/src/views/CRUD/welcome/DashboardTable.tsx
+msgid "Modified By"
+msgstr "作者"
+
 #: superset/assets/src/dashboard/components/SliceAdder.jsx:205
 msgid "Add a new chart to the dashboard"
 msgstr "在看板中添加新图表"

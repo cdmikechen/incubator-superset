@@ -216,13 +216,13 @@ class SliceAdder extends React.Component {
             onKeyPress={this.handleKeyPress}
           />
           <DropdownButton
-            title={`Sort by ${KEYS_TO_SORT[this.state.sortBy].label}`}
+            title={`${t('Sort by')} ${t(KEYS_TO_SORT[this.state.sortBy].label)}`}
             onSelect={this.handleSelect}
             id="slice-adder-sortby"
           >
             {KEYS_TO_SORT.map((item, index) => (
               <MenuItem key={item.key} eventKey={index}>
-                Sort by {item.label}
+                {t('Sort by') + ' ' + t(item.label)}
               </MenuItem>
             ))}
           </DropdownButton>
