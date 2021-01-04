@@ -323,9 +323,9 @@ const config = {
         // include source code for plugins, but exclude node_modules and test files within them
         exclude: [/superset-ui.*\/node_modules\//, /\.test.jsx?$/],
         include: [
-          `${APP_DIR}\\src`,
-          /superset-ui.*\\src/,
-          `${APP_DIR}\\.storybook`,
+          new RegExp(`${APP_DIR}/src`),
+          /superset-ui.*\/src/,
+          new RegExp(`${APP_DIR}/.storybook`),
         ],
         use: [babelLoader],
       },
