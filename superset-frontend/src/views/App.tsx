@@ -84,17 +84,17 @@ const App = () => (
                   <ChartList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path={superset_url_prefix + "/tablemodelviews/list/"}>
+              <Route path={superset_url_prefix + "/tablemodelview/list/"}>
                 <ErrorBoundary>
                   <DatasetList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path={superset_url_prefix + "/databaseviews/list/"}>
+              <Route path={superset_url_prefix + "/databaseview/list/"}>
                 <ErrorBoundary>
                   <DatabaseList user={user} />
                 </ErrorBoundary>
               </Route>
-              <Route path={superset_url_prefix + "/savedqueryviews/list/"}>
+              <Route path={superset_url_prefix + "/savedqueryview/list/"}>
                 <ErrorBoundary>
                   <SavedQueryList user={user} />
                 </ErrorBoundary>
