@@ -45,6 +45,8 @@ import Field from 'src/CRUD/Field';
 
 import withToasts from 'src/messageToasts/enhancers/withToasts';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const DatasourceContainer = styled.div`
   .change-warning {
     margin: 16px 10px 0;
@@ -527,7 +529,7 @@ class DatasourceEditor extends React.PureComponent {
           description={t('Owners of the datasource')}
           control={
             <SelectAsyncControl
-              dataEndpoint="api/v1/dataset/related/owners"
+              dataEndpoint={`${superset_url_prefix}/api/v1/dataset/related/owners`}
               multi
               mutator={data =>
                 data.result.map(pk => ({

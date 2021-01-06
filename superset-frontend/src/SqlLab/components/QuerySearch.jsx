@@ -33,6 +33,8 @@ import {
 import { STATUS_OPTIONS, TIME_OPTIONS } from '../constants';
 import AsyncSelect from '../../components/AsyncSelect';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const propTypes = {
   actions: PropTypes.object.isRequired,
   height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
@@ -219,7 +221,7 @@ class QuerySearch extends React.PureComponent {
           <div className="col-sm-2">
             <AsyncSelect
               onChange={this.onChange}
-              dataEndpoint="/api/v1/database/?q=(filters:!((col:expose_in_sqllab,opr:eq,value:!t)))"
+              dataEndpoint={`${superset_url_prefix}/api/v1/database/?q=(filters:!((col:expose_in_sqllab,opr:eq,value:!t)))`}
               value={this.state.databaseId}
               mutator={this.dbMutator}
               placeholder={t('Filter by database')}

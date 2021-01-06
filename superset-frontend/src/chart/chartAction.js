@@ -41,6 +41,8 @@ import { Logger, LOG_ACTIONS_LOAD_CHART } from '../logger/LogUtils';
 import getClientErrorObject from '../utils/getClientErrorObject';
 import { allowCrossDomain as domainShardingEnabled } from '../utils/hostNamesConfig';
 
+import {superset_url_prefix} from 'src/views/App';
+
 export const CHART_UPDATE_STARTED = 'CHART_UPDATE_STARTED';
 export function chartUpdateStarted(queryController, latestQueryFormData, key) {
   return {
@@ -159,7 +161,7 @@ const v1ChartDataRequest = async (
     // eslint-disable-next-line camelcase
     domainShardingEnabled && requestParams?.dashboard_id;
   const url = getChartDataUri({
-    path: '/api/v1/chart/data',
+    path: `${superset_url_prefix}/api/v1/chart/data`,
     qs,
     allowDomainSharding,
   }).toString();

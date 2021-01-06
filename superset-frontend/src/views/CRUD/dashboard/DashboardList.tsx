@@ -35,6 +35,7 @@ import FaveStar from 'src/components/FaveStar';
 import PropertiesModal from 'src/dashboard/components/PropertiesModal';
 import ListViewCard from 'src/components/ListViewCard';
 import { Dropdown, Menu } from 'src/common/components';
+import {superset_url_prefix} from 'src/views/App';
 
 const PAGE_SIZE = 25;
 const FAVESTAR_BASE_URL = '/superset/favstar/Dashboard';
@@ -98,7 +99,7 @@ function DashboardList(props: DashboardListProps) {
 
   function handleDashboardEdit(edits: Dashboard) {
     return SupersetClient.get({
-      endpoint: `/api/v1/dashboard/${edits.id}`,
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/${edits.id}`,
     }).then(
       ({ json = {} }) => {
         setDashboards(
@@ -123,7 +124,7 @@ function DashboardList(props: DashboardListProps) {
     dashboard_title: dashboardTitle,
   }: Dashboard) {
     return SupersetClient.delete({
-      endpoint: `/api/v1/dashboard/${id}`,
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/${id}`,
     }).then(
       () => {
         refreshData();
@@ -139,7 +140,7 @@ function DashboardList(props: DashboardListProps) {
 
   function handleBulkDashboardDelete(dashboardsToDelete: Dashboard[]) {
     return SupersetClient.delete({
-      endpoint: `/api/v1/dashboard/?q=${rison.encode(
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/?q=${rison.encode(
         dashboardsToDelete.map(({ id }) => id),
       )}`,
     }).then(
@@ -156,7 +157,7 @@ function DashboardList(props: DashboardListProps) {
 
   function handleBulkDashboardExport(dashboardsToExport: Dashboard[]) {
     return window.location.assign(
-      `/api/v1/dashboard/export/?q=${rison.encode(
+      `${superset_url_prefix}/api/v1/dashboard/export/?q=${rison.encode(
         dashboardsToExport.map(({ id }) => id),
       )}`,
     );

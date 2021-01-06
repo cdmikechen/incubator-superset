@@ -33,6 +33,8 @@ import getClientErrorObject from '../../utils/getClientErrorObject';
 import withToasts from '../../messageToasts/enhancers/withToasts';
 import '../stylesheets/buttons.less';
 
+import {superset_url_prefix} from 'src/views/App'
+
 const propTypes = {
   dashboardId: PropTypes.number.isRequired,
   show: PropTypes.bool.isRequired,
@@ -106,7 +108,7 @@ class PropertiesModal extends React.PureComponent {
     // At some point when we have a more consistent frontend
     // datamodel, the dashboard could probably just be passed as a prop.
     SupersetClient.get({
-      endpoint: `/api/v1/dashboard/${this.props.dashboardId}`,
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/${this.props.dashboardId}`,
     }).then(response => {
       const dashboard = response.json.result;
       this.setState(state => ({
@@ -127,9 +129,10 @@ class PropertiesModal extends React.PureComponent {
   }
 
   loadOwnerOptions(input = '') {
+    debugger
     const query = rison.encode({ filter: input });
     return SupersetClient.get({
-      endpoint: `/api/v1/dashboard/related/owners?q=${query}`,
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/related/owners?q=${query}`,
     }).then(
       response => {
         return response.json.result.map(item => ({
@@ -188,7 +191,7 @@ class PropertiesModal extends React.PureComponent {
       this.props.onHide();
     } else {
       SupersetClient.put({
-        endpoint: `/api/v1/dashboard/${this.props.dashboardId}`,
+        endpoint: `${superset_url_prefix}/api/v1/dashboard/${this.props.dashboardId}`,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dashboard_title: values.dashboard_title,

@@ -41,6 +41,8 @@ import TooltipWrapper from 'src/components/TooltipWrapper';
 import Icon from 'src/components/Icon';
 import AddDatasetModal from './AddDatasetModal';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const PAGE_SIZE = 25;
 
 type Dataset = {
@@ -103,7 +105,7 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
 
   const openDatasetEditModal = ({ id }: Dataset) => {
     SupersetClient.get({
-      endpoint: `/api/v1/dataset/${id}`,
+      endpoint: `${superset_url_prefix}/api/v1/dataset/${id}`,
     })
       .then(({ json = {} }) => {
         const owners = json.result.owners.map((owner: any) => owner.id);
@@ -118,7 +120,7 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
 
   const openDatasetDeleteModal = (dataset: Dataset) =>
     SupersetClient.get({
-      endpoint: `/api/v1/dataset/${dataset.id}/related_objects`,
+      endpoint: `${superset_url_prefix}/api/v1/dataset/${dataset.id}/related_objects`,
     })
       .then(({ json = {} }) => {
         setDatasetCurrentlyDeleting({
@@ -435,7 +437,7 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
 
   const handleDatasetDelete = ({ id, table_name: tableName }: Dataset) => {
     SupersetClient.delete({
-      endpoint: `/api/v1/dataset/${id}`,
+      endpoint: `${superset_url_prefix}/api/v1/dataset/${id}`,
     }).then(
       () => {
         refreshData();
@@ -452,7 +454,7 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
 
   const handleBulkDatasetDelete = (datasetsToDelete: Dataset[]) => {
     SupersetClient.delete({
-      endpoint: `/api/v1/dataset/?q=${rison.encode(
+      endpoint: `${superset_url_prefix}/api/v1/dataset/?q=${rison.encode(
         datasetsToDelete.map(({ id }) => id),
       )}`,
     }).then(

@@ -33,6 +33,8 @@ import {
 import getClientErrorObject from '../../utils/getClientErrorObject';
 import COMMON_ERR_MESSAGES from '../../utils/errorMessages';
 
+import {superset_url_prefix} from 'src/views/App';
+
 export const RESET_STATE = 'RESET_STATE';
 export const ADD_QUERY_EDITOR = 'ADD_QUERY_EDITOR';
 export const UPDATE_QUERY_EDITOR = 'UPDATE_QUERY_EDITOR';
@@ -942,7 +944,7 @@ export function mergeTable(table, query) {
 function getTableMetadata(table, query, dispatch) {
   return SupersetClient.get({
     endpoint: encodeURI(
-      `/api/v1/database/${query.dbId}/table/` +
+      `${superset_url_prefix}/api/v1/database/${query.dbId}/table/` +
         `${encodeURIComponent(table.name)}/${encodeURIComponent(
           table.schema,
         )}/`,
@@ -1205,7 +1207,7 @@ export function popSavedQuery(saveQueryId) {
 export function popQuery(queryId) {
   return function (dispatch) {
     return SupersetClient.get({
-      endpoint: `/api/v1/query/${queryId}`,
+      endpoint: `${superset_url_prefix}/api/v1/query/${queryId}`,
     })
       .then(({ json }) => {
         const queryData = json.result;

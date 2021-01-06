@@ -29,6 +29,8 @@ import Button from 'src/components/Button';
 import IndeterminateCheckbox from 'src/components/IndeterminateCheckbox';
 import { DatabaseObject } from './types';
 
+import {superset_url_prefix} from 'src/views/App';
+
 interface DatabaseModalProps {
   addDangerToast: (msg: string) => void;
   addSuccessToast: (msg: string) => void;
@@ -160,7 +162,7 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
     };
 
     SupersetClient.post({
-      endpoint: 'api/v1/database/test_connection',
+      endpoint: `${superset_url_prefix}/api/v1/database/test_connection`,
       body: JSON.stringify(connection),
       headers: { 'Content-Type': 'application/json' },
     })

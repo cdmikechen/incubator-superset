@@ -24,6 +24,8 @@ import { createErrorHandler } from 'src/views/CRUD/utils';
 import { FetchDataConfig } from 'src/components/ListView';
 import { FavoriteStatus } from './types';
 
+import {superset_url_prefix} from 'src/views/App'
+
 interface ListViewResourceState<D extends object = any> {
   loading: boolean;
   collection: D[];
@@ -38,6 +40,7 @@ export function useListViewResource<D extends object = any>(
   resourceLabel: string, // resourceLabel for translations
   handleErrorMsg: (errorMsg: string) => void,
 ) {
+  
   const [state, setState] = useState<ListViewResourceState<D>>({
     count: 0,
     collection: [],
@@ -56,8 +59,9 @@ export function useListViewResource<D extends object = any>(
   }
 
   useEffect(() => {
+    
     SupersetClient.get({
-      endpoint: `/api/v1/${resource}/_info`,
+      endpoint: `${superset_url_prefix}/api/v1/${resource}/_info`,
     }).then(
       ({ json: infoJson = {} }) => {
         updateState({
@@ -119,7 +123,7 @@ export function useListViewResource<D extends object = any>(
       });
 
       return SupersetClient.get({
-        endpoint: `/api/v1/${resource}/?q=${queryParams}`,
+        endpoint: `${superset_url_prefix}/api/v1/${resource}/?q=${queryParams}`,
       })
         .then(
           ({ json = {} }) => {
@@ -194,7 +198,7 @@ export function useSingleViewResource<D extends object = any>(
     });
 
     return SupersetClient.get({
-      endpoint: `/api/v1/${resourceName}/${resourceID}`,
+      endpoint: `${superset_url_prefix}/api/v1/${resourceName}/${resourceID}`,
     })
       .then(
         ({ json = {} }) => {
@@ -224,7 +228,7 @@ export function useSingleViewResource<D extends object = any>(
     });
 
     return SupersetClient.post({
-      endpoint: `/api/v1/${resourceName}/`,
+      endpoint: `${superset_url_prefix}/api/v1/${resourceName}/`,
       body: JSON.stringify(resource),
       headers: { 'Content-Type': 'application/json' },
     })
@@ -256,7 +260,7 @@ export function useSingleViewResource<D extends object = any>(
     });
 
     return SupersetClient.put({
-      endpoint: `/api/v1/${resourceName}/${resourceID}`,
+      endpoint: `${superset_url_prefix}/api/v1/${resourceName}/${resourceID}`,
       body: JSON.stringify(resource),
       headers: { 'Content-Type': 'application/json' },
     })

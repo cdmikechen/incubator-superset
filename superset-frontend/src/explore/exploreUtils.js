@@ -26,6 +26,8 @@ import {
 import { availableDomains } from 'src/utils/hostNamesConfig';
 import { safeStringify } from 'src/utils/safeStringify';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const MAX_URL_LENGTH = 8000;
 
 export function getChartKey(explore) {
@@ -265,7 +267,7 @@ export const exportChart = ({
     });
     payload = formData;
   } else {
-    url = '/api/v1/chart/data';
+    url = `${superset_url_prefix}/api/v1/chart/data`;
     payload = buildV1ChartDataPayload({
       formData,
       force,

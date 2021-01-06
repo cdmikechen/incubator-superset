@@ -40,6 +40,8 @@ import ActionsBar, { ActionProps } from 'src/components/ListView/ActionsBar';
 import { IconName } from 'src/components/Icon';
 import { commonMenuData } from 'src/views/CRUD/data/common';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const PAGE_SIZE = 25;
 
 interface SavedQueryListProps {
@@ -165,7 +167,7 @@ function SavedQueryList({
 
   const handleQueryDelete = ({ id, label }: SavedQueryObject) => {
     SupersetClient.delete({
-      endpoint: `/api/v1/saved_query/${id}`,
+      endpoint: `${superset_url_prefix}/api/v1/saved_query/${id}`,
     }).then(
       () => {
         refreshData();
@@ -180,7 +182,7 @@ function SavedQueryList({
 
   const handleBulkQueryDelete = (queriesToDelete: SavedQueryObject[]) => {
     SupersetClient.delete({
-      endpoint: `/api/v1/saved_query/?q=${rison.encode(
+      endpoint: `${superset_url_prefix}/api/v1/saved_query/?q=${rison.encode(
         queriesToDelete.map(({ id }) => id),
       )}`,
     }).then(

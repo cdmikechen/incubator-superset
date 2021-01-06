@@ -35,6 +35,8 @@ import downloadAsImage from '../../utils/downloadAsImage';
 import getDashboardUrl from '../util/getDashboardUrl';
 import { getActiveFilters } from '../util/activeDashboardFilters';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const propTypes = {
   addSuccessToast: PropTypes.func.isRequired,
   addDangerToast: PropTypes.func.isRequired,
@@ -89,7 +91,7 @@ class HeaderActionsDropdown extends React.PureComponent {
   UNSAFE_componentWillMount() {
     injectCustomCss(this.state.css);
 
-    SupersetClient.get({ endpoint: '/csstemplateasyncmodelview/api/read' })
+    SupersetClient.get({ endpoint: `${superset_url_prefix}/csstemplateasyncmodelview/api/read` })
       .then(({ json }) => {
         const cssTemplates = json.result.map(row => ({
           value: row.template_name,

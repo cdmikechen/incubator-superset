@@ -24,7 +24,7 @@ import Label from 'src/components/Label';
 
 import SupersetAsyncSelect from './AsyncSelect';
 import RefreshLabel from './RefreshLabel';
-import {superset_url_prefix} from 'src/views/App'
+import {superset_url_prefix} from 'src/views/App';
 
 const FieldTitle = styled.p`
   color: ${({ theme }) => theme.colors.secondary.light2};

@@ -40,6 +40,8 @@ import ListViewCard from 'src/components/ListViewCard';
 import Label from 'src/components/Label';
 import { Dropdown, Menu } from 'src/common/components';
 
+import {superset_url_prefix} from 'src/views/App';
+
 const PAGE_SIZE = 25;
 const FAVESTAR_BASE_URL = '/superset/favstar/slice';
 
@@ -63,7 +65,7 @@ const createFetchDatasets = (handleError: (err: Response) => void) => async (
     });
 
     const { json = {} } = await SupersetClient.get({
-      endpoint: `/api/v1/dataset/?q=${queryParams}`,
+      endpoint: `${superset_url_prefix}/api/v1/dataset/?q=${queryParams}`,
     });
 
     const datasets = json?.result?.map(
@@ -136,7 +138,7 @@ function ChartList(props: ChartListProps) {
 
   function handleChartDelete({ id, slice_name: sliceName }: Chart) {
     SupersetClient.delete({
-      endpoint: `/api/v1/chart/${id}`,
+      endpoint: `${superset_url_prefix}/api/v1/chart/${id}`,
     }).then(
       () => {
         refreshData();
@@ -150,7 +152,7 @@ function ChartList(props: ChartListProps) {
 
   function handleBulkChartDelete(chartsToDelete: Chart[]) {
     SupersetClient.delete({
-      endpoint: `/api/v1/chart/?q=${rison.encode(
+      endpoint: `${superset_url_prefix}/api/v1/chart/?q=${rison.encode(
         chartsToDelete.map(({ id }) => id),
       )}`,
     }).then(

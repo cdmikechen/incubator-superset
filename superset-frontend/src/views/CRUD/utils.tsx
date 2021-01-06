@@ -24,12 +24,14 @@ import {
 import rison from 'rison';
 import getClientErrorObject from 'src/utils/getClientErrorObject';
 
+import {superset_url_prefix} from 'src/views/App'
+
 const createFetchResourceMethod = (method: string) => (
   resource: string,
   relation: string,
   handleError: (error: Response) => void,
 ) => async (filterValue = '', pageIndex?: number, pageSize?: number) => {
-  const resourceEndpoint = `/api/v1/${resource}/${method}/${relation}`;
+  const resourceEndpoint = `${superset_url_prefix}/api/v1/${resource}/${method}/${relation}`;
 
   try {
     const queryParams = rison.encode({

@@ -25,6 +25,8 @@ import TableSelector from 'src/components/TableSelector';
 import withToasts from 'src/messageToasts/enhancers/withToasts';
 import { createErrorHandler } from 'src/views/CRUD/utils';
 
+import {superset_url_prefix} from 'src/views/App';
+
 type DatasetAddObject = {
   id: number;
   databse: number;
@@ -77,7 +79,7 @@ const DatasetModal: FunctionComponent<DatasetModalProps> = ({
 
   const onSave = () => {
     SupersetClient.post({
-      endpoint: '/api/v1/dataset/',
+      endpoint: `${superset_url_prefix}/api/v1/dataset/`,
       body: JSON.stringify({
         database: datasourceId,
         ...(currentSchema ? { schema: currentSchema } : {}),

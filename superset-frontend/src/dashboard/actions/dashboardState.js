@@ -42,6 +42,8 @@ import serializeFilterScopes from '../util/serializeFilterScopes';
 import { getActiveFilters } from '../util/activeDashboardFilters';
 import { safeStringify } from '../../utils/safeStringify';
 
+import {superset_url_prefix} from 'src/views/App';
+
 export const SET_UNSAVED_CHANGES = 'SET_UNSAVED_CHANGES';
 export function setUnsavedChanges(hasUnsavedChanges) {
   return { type: SET_UNSAVED_CHANGES, payload: { hasUnsavedChanges } };
@@ -110,7 +112,7 @@ export function togglePublished(isPublished) {
 export function savePublished(id, isPublished) {
   return function savePublishedThunk(dispatch) {
     return SupersetClient.put({
-      endpoint: `/api/v1/dashboard/${id}`,
+      endpoint: `${superset_url_prefix}/api/v1/dashboard/${id}`,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         published: isPublished,

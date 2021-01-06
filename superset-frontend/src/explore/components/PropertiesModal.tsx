@@ -35,6 +35,8 @@ import Chart from 'src/types/Chart';
 import FormLabel from 'src/components/FormLabel';
 import getClientErrorObject from '../../utils/getClientErrorObject';
 
+import {superset_url_prefix} from 'src/views/App';
+
 export type Slice = {
   id?: number;
   slice_id: number;
@@ -84,7 +86,7 @@ function PropertiesModal({ slice, onHide, onSave }: InternalProps) {
   async function fetchChartData() {
     try {
       const response = await SupersetClient.get({
-        endpoint: `/api/v1/chart/${slice.slice_id}`,
+        endpoint: `${superset_url_prefix}/api/v1/chart/${slice.slice_id}`,
       });
       const chart = response.json.result;
       setOwners(
@@ -105,11 +107,12 @@ function PropertiesModal({ slice, onHide, onSave }: InternalProps) {
   }, []);
 
   const loadOptions = (input = '') => {
+    debugger
     const query = rison.encode({
       filter: input,
     });
     return SupersetClient.get({
-      endpoint: `/api/v1/chart/related/owners?q=${query}`,
+      endpoint: `${superset_url_prefix}/api/v1/chart/related/owners?q=${query}`,
     }).then(
       response => {
         const { result } = response.json;
@@ -139,7 +142,7 @@ function PropertiesModal({ slice, onHide, onSave }: InternalProps) {
     }
     try {
       const res = await SupersetClient.put({
-        endpoint: `/api/v1/chart/${slice.slice_id}`,
+        endpoint: `${superset_url_prefix}/api/v1/chart/${slice.slice_id}`,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
