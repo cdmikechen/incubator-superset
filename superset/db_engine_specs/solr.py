@@ -14,24 +14,21 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# pylint: disable=no-self-use
 
-from superset.commands.exceptions import CommandInvalidError
-from superset.commands.importers.v1.utils import is_valid_config
-from tests.base_tests import SupersetTestCase
+from superset.db_engine_specs.base import BaseEngineSpec
 
 
-class TestCommandsExceptions(SupersetTestCase):
-    def test_command_invalid_error(self):
-        exception = CommandInvalidError("A test")
-        assert str(exception) == "A test"
+class SolrEngineSpec(BaseEngineSpec):  # pylint: disable=abstract-method
+    """Engine spec for Apache Solr"""
 
+    engine = "solr"
+    engine_name = "Apache Solr"
 
-class TestImportersV1Utils(SupersetTestCase):
-    def test_is_valid_config(self):
-        assert is_valid_config("metadata.yaml")
-        assert is_valid_config("databases/examples.yaml")
-        assert not is_valid_config(".DS_Store")
-        assert not is_valid_config(
-            "__MACOSX/chart_export_20210111T145253/databases/._examples.yaml"
-        )
+    time_groupby_inline = False
+    time_secondary_columns = False
+    allows_joins = False
+    allows_subqueries = False
+
+    _time_grain_expressions = {
+        None: "{col}",
+    }
