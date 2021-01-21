@@ -17,7 +17,7 @@
  * under the License.
  */
 import React from 'react';
-import { styled } from '@superset-ui/core';
+import { styled, t } from '@superset-ui/core';
 
 interface Props {
   position?: string;
@@ -45,7 +45,7 @@ export default function Loading({ position = 'floating' }: Props) {
   return (
     <LoaderImg
       className={`loading ${position}`}
-      alt="Loading..."
+      alt={t("Loading...")}
       src="/static/assets/images/loading.gif"
     />
   );

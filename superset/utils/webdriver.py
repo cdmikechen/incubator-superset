@@ -101,30 +101,33 @@ class WebDriverProxy:
         user: "User",
         retries: int = SELENIUM_RETRIES,
     ) -> Optional[bytes]:
-        driver = self.auth(user)
-        driver.set_window_size(*self._window)
-        driver.get(url)
-        img: Optional[bytes] = None
-        logger.debug("Sleeping for %i seconds", SELENIUM_HEADSTART)
-        time.sleep(SELENIUM_HEADSTART)
+        driver = None
         try:
-            logger.debug("Wait for the presence of %s", element_name)
-            element = WebDriverWait(driver, self._screenshot_locate_wait).until(
-                EC.presence_of_element_located((By.CLASS_NAME, element_name))
-            )
-            logger.debug("Wait for .loading to be done")
-            WebDriverWait(driver, self._screenshot_load_wait).until_not(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, "loading"))
-            )
-            logger.info("Taking a PNG screenshot or url %s", url)
-            img = element.screenshot_as_png
-        except TimeoutException:
-            logger.error("Selenium timed out requesting url %s", url)
-        except WebDriverException as ex:
-            logger.error(ex)
-            # Some webdrivers do not support screenshots for elements.
-            # In such cases, take a screenshot of the entire page.
-            img = driver.screenshot()  # pylint: disable=no-member
+            driver = self.auth(user)
+            driver.set_window_size(*self._window)
+            driver.get(url)
+            img: Optional[bytes] = None
+            logger.debug("Sleeping for %i seconds", SELENIUM_HEADSTART)
+            time.sleep(SELENIUM_HEADSTART)
+            try:
+                logger.debug("Wait for the presence of %s", element_name)
+                element = WebDriverWait(driver, self._screenshot_locate_wait).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, element_name))
+                )
+                logger.debug("Wait for .loading to be done")
+                WebDriverWait(driver, self._screenshot_load_wait).until_not(
+                    EC.presence_of_all_elements_located((By.CLASS_NAME, "loading"))
+                )
+                logger.info("Taking a PNG screenshot or url %s", url)
+                img = element.screenshot_as_png
+            except TimeoutException:
+                logger.error("Selenium timed out requesting url %s", url)
+            except WebDriverException as ex:
+                logger.error(ex)
+                # Some webdrivers do not support screenshots for elements.
+                # In such cases, take a screenshot of the entire page.
+                img = driver.screenshot()  # pylint: disable=no-member
         finally:
-            self.destroy(driver, retries)
+            if driver is not None:
+                self.destroy(driver, retries)
         return img

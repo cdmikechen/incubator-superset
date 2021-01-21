@@ -411,7 +411,7 @@ class TabbedSqlEditors extends React.PureComponent {
         hideAdd={this.props.offline}
         onEdit={this.handleEdit}
         addIcon={
-          <Tooltip id="add-tab" placement="bottom" title="New tab (Ctrl + t)">
+          <Tooltip id="add-tab" placement="bottom" title={ t('New tab (Ctrl + t)') } >
             <i data-test="add-tab-icon" className="fa fa-plus-circle" />
           </Tooltip>
         }
