@@ -6697,3 +6697,88 @@ msgstr "范围类型"
 
 msgid "Previous"
 msgstr "之前"
+
+# superset-frontend/src/views/CRUD/dashboard/DashboardCard.tsx:138
+msgid "published"
+msgstr "已发布"
+
+# superset-frontend/src/views/CRUD/dashboard/DashboardCard.tsx:138
+msgid "draft"
+msgstr "草稿"
+
+# superset-frontend/src/views/CRUD/dashboard/DashboardCard.tsx:97
+msgid "Are you sure you want to delete"
+msgstr "请确认您想删除"
+
+# superset-frontend/src/explore/components/SaveModal.tsx
+msgid "Save Chart"
+msgstr "保存图表"
+
+# superset-frontend/src/explore/components/SaveModal.tsx:220
+msgid "Save (Overwrite)"
+msgstr "保存（覆盖）"
+
+# superset-frontend/src/explore/components/SaveModal.tsx:230
+msgid "Save as ..."
+msgstr "另存为"
+
+# superset-frontend/src/explore/components/SaveModal.tsx:235
+msgid "Chart name"
+msgstr "图表名称"
+
+# superset-frontend/src/explore/components/SaveModal.tsx:247
+msgid "Add to dashboard"
+msgstr "添加到看板"
+
+msgid "Please confirm"
+msgstr "请确认"
+
+msgid "Please Confirm"
+msgstr "请确认"
+
+msgid "DELETE"
+msgstr "删除"
+
+msgid "delete"
+msgstr "删除"
+
+# superset-frontend/src/components/DeleteModal.tsx:69
+msgid 'Type \"%s\" to confirm'
+msgstr "请按 \"%s\" 确认"
+
+msgid 'Deleted: %s'
+msgstr "已删除: %s"
+
+# superset-frontend/src/explore/components/ExploreChartHeader.jsx:166
+msgid 'Edit chart properties'
+msgstr "编辑图表属性"
+
+msgid 'Basic Information'
+msgstr "基础信息"
+
+msgid 'Configuration'
+msgstr "配置"
+
+msgid 'Access'
+msgstr "访问权限"
+
+msgid 'The description can be displayed as widget headers in the dashboard view. Supports markdown.'
+msgstr "作为为小部件标题可以在仪表板视图中显示的描述，支持markdown格式语法。"
+
+msgid "Duration (in seconds) of the caching timeout for this chart. Note this defaults to the dataset's timeout if undefined."
+msgstr "此图表的缓存超时前的持续时间（秒）。请注意，如果未定义则默认为数据集的超时时间。"
+
+msgid 'A list of users who can alter the chart. Searchable by name or username.'
+msgstr "有权处理该图表的用户列表。可按名称或用户名搜索。"
+
+msgid 'A readable URL for your dashboard'
+msgstr "一个可读的看板URL"
+
+msgid 'Owners is a list of users who can alter the dashboard. Searchable by name or username.'
+msgstr "有权处理该看板的用户列表。可按名称或用户名搜索。"
+
+msgid 'URL Slug'
+msgstr "URL后缀"
+
+msgid 'Dashboard Properties'
+msgstr "看板属性"
