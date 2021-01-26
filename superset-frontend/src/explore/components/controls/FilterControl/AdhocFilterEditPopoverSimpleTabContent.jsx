@@ -23,9 +23,8 @@ import { Select } from 'src/common/components/Select';
 import { Input } from 'src/common/components';
 import { t, SupersetClient, styled } from '@superset-ui/core';
 
-import AdhocFilter, { EXPRESSION_TYPES, CLAUSES } from '../AdhocFilter';
-import adhocMetricType from '../propTypes/adhocMetricType';
-import columnType from '../propTypes/columnType';
+import adhocMetricType from 'src/explore/components/controls/MetricControl/adhocMetricType';
+import columnType from 'src/explore/propTypes/columnType';
 import {
   OPERATORS,
   OPERATORS_OPTIONS,
@@ -35,8 +34,9 @@ import {
   MULTI_OPERATORS,
   CUSTOM_OPERATORS,
   DISABLE_INPUT_OPERATORS,
-} from '../constants';
-import FilterDefinitionOption from './FilterDefinitionOption';
+} from 'src/explore/constants';
+import FilterDefinitionOption from 'src/explore/components/controls/MetricControl/FilterDefinitionOption';
+import AdhocFilter, { EXPRESSION_TYPES, CLAUSES } from './AdhocFilter';
 
 const SelectWithLabel = styled(Select)`
   .ant-select-selector::after {
@@ -323,7 +323,7 @@ export default class AdhocFilterEditPopoverSimpleTabContent extends React.Compon
       loading: this.state.loading,
       value: comparator,
       onChange: this.onComparatorChange,
-      notFoundContent: t('type a value here'),
+      notFoundContent: t('Type a value here'),
       disabled: DISABLE_INPUT_OPERATORS.includes(operator),
       placeholder: this.createSuggestionsPlaceholder(),
       labelText: comparator?.length > 0 && this.createSuggestionsPlaceholder(),
