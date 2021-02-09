@@ -42,14 +42,11 @@ const propTypes = {
   onClose: PropTypes.func.isRequired,
   onResize: PropTypes.func.isRequired,
   getCurrentTab: PropTypes.func,
+  getCurrentLabel: PropTypes.func,
   columns: PropTypes.arrayOf(columnType),
-  savedMetrics: PropTypes.arrayOf(savedMetricType),
+  savedMetricsOptions: PropTypes.arrayOf(savedMetricType),
   savedMetric: savedMetricType,
   datasourceType: PropTypes.string,
-  title: PropTypes.shape({
-    label: PropTypes.string,
-    hasCustomLabel: PropTypes.bool,
-  }),
 };
 
 const defaultProps = {
@@ -72,12 +69,12 @@ export const SAVED_TAB_KEY = 'SAVED';
 const startingWidth = 320;
 const startingHeight = 240;
 
-export default class AdhocMetricEditPopover extends React.Component {
+export default class AdhocMetricEditPopover extends React.PureComponent {
   // "Saved" is a default tab unless there are no saved metrics for dataset
   defaultActiveTabKey =
     (this.props.savedMetric.metric_name || this.props.adhocMetric.isNew) &&
-    Array.isArray(this.props.savedMetrics) &&
-    this.props.savedMetrics.length > 0
+    Array.isArray(this.props.savedMetricsOptions) &&
+    this.props.savedMetricsOptions.length > 0
       ? SAVED_TAB_KEY
       : this.props.adhocMetric.expressionType;
 
@@ -110,20 +107,31 @@ export default class AdhocMetricEditPopover extends React.Component {
     this.props.getCurrentTab(this.defaultActiveTabKey);
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      prevState.adhocMetric?.sqlExpression !==
+        this.state.adhocMetric?.sqlExpression ||
+      prevState.adhocMetric?.aggregate !== this.state.adhocMetric?.aggregate ||
+      prevState.adhocMetric?.column?.column_name !==
+        this.state.adhocMetric?.column?.column_name ||
+      prevState.savedMetric?.metric_name !== this.state.savedMetric?.metric_name
+    ) {
+      this.props.getCurrentLabel({
+        savedMetricLabel:
+          this.state.savedMetric?.verbose_name ||
+          this.state.savedMetric?.metric_name,
+        adhocMetricLabel: this.state.adhocMetric?.getDefaultLabel(),
+      });
+    }
+  }
+
   componentWillUnmount() {
     document.removeEventListener('mouseup', this.onMouseUp);
     document.removeEventListener('mousemove', this.onMouseMove);
   }
 
   onSave() {
-    const { title } = this.props;
-    const { hasCustomLabel } = title;
-    let { label } = title;
     const { adhocMetric, savedMetric } = this.state;
-    const metricLabel = adhocMetric.label;
-    if (!hasCustomLabel) {
-      label = metricLabel;
-    }
 
     const metric = savedMetric?.metric_name ? savedMetric : adhocMetric;
     const oldMetric = this.props.savedMetric?.metric_name
@@ -132,8 +140,6 @@ export default class AdhocMetricEditPopover extends React.Component {
     this.props.onChange(
       {
         ...metric,
-        label,
-        hasCustomLabel,
       },
       oldMetric,
     );
@@ -173,7 +179,7 @@ export default class AdhocMetricEditPopover extends React.Component {
   }
 
   onSavedMetricChange(savedMetricId) {
-    const savedMetric = this.props.savedMetrics.find(
+    const savedMetric = this.props.savedMetricsOptions.find(
       metric => metric.id === savedMetricId,
     );
     this.setState(prevState => ({
@@ -259,7 +265,7 @@ export default class AdhocMetricEditPopover extends React.Component {
       adhocMetric: propsAdhocMetric,
       savedMetric: propsSavedMetric,
       columns,
-      savedMetrics,
+      savedMetricsOptions,
       onChange,
       onClose,
       onResize,
@@ -303,7 +309,7 @@ export default class AdhocMetricEditPopover extends React.Component {
     };
 
     const savedSelectProps = {
-      placeholder: t('%s saved metric(s)', savedMetrics?.length ?? 0),
+      placeholder: t('%s saved metric(s)', savedMetricsOptions?.length ?? 0),
       value: savedMetric?.verbose_name || savedMetric?.metric_name,
       onChange: this.onSavedMetricChange,
       allowClear: true,
@@ -348,9 +354,13 @@ export default class AdhocMetricEditPopover extends React.Component {
               <FormLabel>
                 <strong>{t('Saved metric')}</strong>
               </FormLabel>
-              <Select name="select-saved" {...savedSelectProps}>
-                {Array.isArray(savedMetrics) &&
-                  savedMetrics.map(savedMetric => (
+              <Select
+                {...savedSelectProps}
+                name="select-saved"
+                getPopupContainer={triggerNode => triggerNode.parentNode}
+              >
+                {Array.isArray(savedMetricsOptions) &&
+                  savedMetricsOptions.map(savedMetric => (
                     <Select.Option
                       value={savedMetric.id}
                       filterBy={
@@ -369,7 +379,11 @@ export default class AdhocMetricEditPopover extends React.Component {
               <FormLabel>
                 <strong>{t('column')}</strong>
               </FormLabel>
-              <Select name="select-column" {...columnSelectProps}>
+              <Select
+                {...columnSelectProps}
+                name="select-column"
+                getPopupContainer={triggerNode => triggerNode.parentNode}
+              >
                 {columns.map(column => (
                   <Select.Option
                     value={column.id}
@@ -385,7 +399,11 @@ export default class AdhocMetricEditPopover extends React.Component {
               <FormLabel>
                 <strong>{t('aggregate')}</strong>
               </FormLabel>
-              <Select name="select-aggregate" {...aggregateSelectProps}>
+              <Select
+                {...aggregateSelectProps}
+                name="select-aggregate"
+                getPopupContainer={triggerNode => triggerNode.parentNode}
+              >
                 {AGGREGATES_OPTIONS.map(option => (
                   <Select.Option value={option} key={option}>
                     {option}

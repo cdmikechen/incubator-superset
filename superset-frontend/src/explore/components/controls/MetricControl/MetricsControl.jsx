@@ -64,6 +64,21 @@ const defaultProps = {
   columns: [],
 };
 
+function getOptionsForSavedMetrics(
+  savedMetrics,
+  currentMetricValues,
+  currentMetric,
+) {
+  return (
+    savedMetrics?.filter(savedMetric =>
+      Array.isArray(currentMetricValues)
+        ? !currentMetricValues.includes(savedMetric.metric_name) ||
+          savedMetric.metric_name === currentMetric
+        : savedMetric,
+    ) ?? []
+  );
+}
+
 function isDictionaryForAdhocMetric(value) {
   return value && !(value instanceof AdhocMetric) && value.expressionType;
 }
@@ -131,6 +146,11 @@ class MetricsControl extends React.PureComponent {
         onRemoveMetric={() => this.onRemoveMetric(index)}
         columns={this.props.columns}
         savedMetrics={this.props.savedMetrics}
+        savedMetricsOptions={getOptionsForSavedMetrics(
+          this.props.savedMetrics,
+          this.props.value,
+          this.props.value?.[index],
+        )}
         datasourceType={this.props.datasourceType}
         onMoveLabel={this.moveLabel}
         onDropLabel={() => this.props.onChange(this.state.value)}
@@ -268,7 +288,11 @@ class MetricsControl extends React.PureComponent {
         adhocMetric={new AdhocMetric({ isNew: true })}
         onMetricEdit={this.onNewMetric}
         columns={this.props.columns}
-        savedMetrics={this.props.savedMetrics}
+        savedMetricsOptions={getOptionsForSavedMetrics(
+          this.props.savedMetrics,
+          this.props.value,
+          null,
+        )}
         savedMetric={{}}
         datasourceType={this.props.datasourceType}
         createNew
