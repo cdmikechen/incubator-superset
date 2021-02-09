@@ -89,6 +89,7 @@ const Styles = styled.div`
   }
   .dataset-svg {
     margin-right: ${({ theme }) => 2 * theme.gridUnit}px;
+    flex: none;
   }
 `;
 
@@ -157,7 +158,7 @@ class DatasourceControl extends React.PureComponent {
   render() {
     const { showChangeDatasourceModal, showEditDatasourceModal } = this.state;
     const { datasource, onChange } = this.props;
-    const isMissingDatasource = datasource;
+    const isMissingDatasource = datasource.id == null;
     const datasourceMenu = (
       <Menu onClick={this.handleMenuItemClick}>
         {this.props.isEditable && (
