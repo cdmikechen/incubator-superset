@@ -15,22 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 # isort:skip_file
-import datetime
 import inspect
 import re
 import unittest
-from unittest.mock import Mock, patch
 
-import pandas as pd
+from unittest.mock import Mock, patch
+from typing import Any, Dict
+
 import prison
 import pytest
-import random
 
 from flask import current_app, g
-from sqlalchemy import Float, Date, String
 
 from superset.models.dashboard import Dashboard
-from tests.fixtures.world_bank_dashboard import load_world_bank_dashboard_with_slices
 
 from superset import app, appbuilder, db, security_manager, viz, ConnectorRegistry
 from superset.connectors.druid.models import DruidCluster, DruidDatasource
@@ -43,14 +40,14 @@ from superset.sql_parse import Table
 from superset.utils.core import get_example_database
 
 from .base_tests import SupersetTestCase
-from .dashboard_utils import (
-    create_table_for_dashboard,
-    create_slice,
-    create_dashboard,
-)
-from .fixtures.energy_dashboard import load_energy_table_with_slice
-from .fixtures.unicode_dashboard import load_unicode_dashboard_with_slice
 from tests.fixtures.birth_names_dashboard import load_birth_names_dashboard_with_slices
+from tests.fixtures.energy_dashboard import load_energy_table_with_slice
+from tests.fixtures.public_role import (
+    public_role_like_gamma,
+    public_role_like_test_role,
+)
+from tests.fixtures.unicode_dashboard import load_unicode_dashboard_with_slice
+from tests.fixtures.world_bank_dashboard import load_world_bank_dashboard_with_slices
 
 NEW_SECURITY_CONVERGE_VIEWS = (
     "Annotation",
@@ -567,6 +564,7 @@ class TestRolePermission(SupersetTestCase):
         )  # wb_health_population slice, has access
         self.assertNotIn("Girl Name Cloud", data)  # birth_names slice, no access
 
+    @pytest.mark.usefixtures("public_role_like_gamma")
     def test_public_sync_role_data_perms(self):
         """
         Security: Tests if the sync role method preserves data access permissions
@@ -594,13 +592,11 @@ class TestRolePermission(SupersetTestCase):
         # Cleanup
         self.revoke_public_access_to_table(table)
 
+    @pytest.mark.usefixtures("public_role_like_test_role")
     def test_public_sync_role_builtin_perms(self):
         """
         Security: Tests public role creation based on a builtin role
         """
-        current_app.config["PUBLIC_ROLE_LIKE"] = "TestRole"
-
-        security_manager.sync_role_definitions()
         public_role = security_manager.get_public_role()
         public_role_resource_names = [
             [permission.view_menu.name, permission.permission.name]
@@ -608,10 +604,6 @@ class TestRolePermission(SupersetTestCase):
         ]
         for pvm in current_app.config["FAB_ROLES"]["TestRole"]:
             assert pvm in public_role_resource_names
-
-        # Cleanup
-        current_app.config["PUBLIC_ROLE_LIKE"] = "Gamma"
-        security_manager.sync_role_definitions()
 
     def test_sqllab_gamma_user_schema_access_to_sqllab(self):
         session = db.session
@@ -678,12 +670,13 @@ class TestRolePermission(SupersetTestCase):
         self.assertIn(("can_csv", "Superset"), perm_set)
         self.assertIn(("can_dashboard", "Superset"), perm_set)
         self.assertIn(("can_explore", "Superset"), perm_set)
+        self.assertIn(("can_share_chart", "Superset"), perm_set)
+        self.assertIn(("can_share_dashboard", "Superset"), perm_set)
         self.assertIn(("can_explore_json", "Superset"), perm_set)
         self.assertIn(("can_fave_dashboards", "Superset"), perm_set)
         self.assertIn(("can_fave_slices", "Superset"), perm_set)
         self.assertIn(("can_save_dash", "Superset"), perm_set)
         self.assertIn(("can_slice", "Superset"), perm_set)
-        self.assertIn(("can_explore", "Superset"), perm_set)
         self.assertIn(("can_explore_json", "Superset"), perm_set)
         self.assertIn(("can_userinfo", "UserDBModelView"), perm_set)
         self.assert_can_menu("Databases", perm_set)
@@ -815,6 +808,7 @@ class TestRolePermission(SupersetTestCase):
         self.assert_can_gamma(get_perm_tuples("Gamma"))
         self.assert_cannot_alpha(get_perm_tuples("Gamma"))
 
+    @pytest.mark.usefixtures("public_role_like_gamma")
     def test_public_permissions_basic(self):
         self.assert_can_gamma(get_perm_tuples("Public"))
 
@@ -838,9 +832,18 @@ class TestRolePermission(SupersetTestCase):
 
     def test_sql_lab_permissions(self):
         sql_lab_set = get_perm_tuples("sql_lab")
-        self.assertIn(("can_sql_json", "Superset"), sql_lab_set)
         self.assertIn(("can_csv", "Superset"), sql_lab_set)
-        self.assertIn(("can_search_queries", "Superset"), sql_lab_set)
+        self.assertIn(("can_read", "Database"), sql_lab_set)
+        self.assertIn(("can_read", "SavedQuery"), sql_lab_set)
+        self.assertIn(("can_sql_json", "Superset"), sql_lab_set)
+        self.assertIn(("can_sqllab_viz", "Superset"), sql_lab_set)
+        self.assertIn(("can_sqllab_table_viz", "Superset"), sql_lab_set)
+        self.assertIn(("can_sqllab", "Superset"), sql_lab_set)
+
+        self.assertIn(("menu_access", "SQL Lab"), sql_lab_set)
+        self.assertIn(("menu_access", "SQL Editor"), sql_lab_set)
+        self.assertIn(("menu_access", "Saved Queries"), sql_lab_set)
+        self.assertIn(("menu_access", "Query Search"), sql_lab_set)
 
         self.assert_cannot_alpha(sql_lab_set)
 
@@ -875,6 +878,8 @@ class TestRolePermission(SupersetTestCase):
         self.assertIn(("can_csv", "Superset"), gamma_perm_set)
         self.assertIn(("can_dashboard", "Superset"), gamma_perm_set)
         self.assertIn(("can_explore", "Superset"), gamma_perm_set)
+        self.assertIn(("can_share_chart", "Superset"), gamma_perm_set)
+        self.assertIn(("can_share_dashboard", "Superset"), gamma_perm_set)
         self.assertIn(("can_explore_json", "Superset"), gamma_perm_set)
         self.assertIn(("can_fave_dashboards", "Superset"), gamma_perm_set)
         self.assertIn(("can_fave_slices", "Superset"), gamma_perm_set)
@@ -1037,9 +1042,9 @@ class TestRowLevelSecurity(SupersetTestCase):
     """
 
     rls_entry = None
-    query_obj = dict(
+    query_obj: Dict[str, Any] = dict(
         groupby=[],
-        metrics=[],
+        metrics=None,
         filter=[],
         is_timeseries=False,
         columns=["value"],

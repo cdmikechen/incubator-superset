@@ -19,11 +19,11 @@
 import React, { RefObject } from 'react';
 import Select from 'src/components/Select';
 import { t, styled } from '@superset-ui/core';
-import { Alert } from 'react-bootstrap';
+import Alert from 'src/components/Alert';
 import Button from 'src/components/Button';
 
 import ModalTrigger from 'src/components/ModalTrigger';
-import FormLabel from 'src/components/FormLabel';
+import { FormLabel } from 'src/components/Form';
 
 export const options = [
   [0, t("Don't refresh")],
@@ -124,11 +124,16 @@ class RefreshIntervalModal extends React.PureComponent<
             />
             {showRefreshWarning && (
               <RefreshWarningContainer>
-                <Alert bsStyle="warning">
-                  <div>{refreshWarning}</div>
-                  <br />
-                  <strong>{t('Are you sure you want to proceed?')}</strong>
-                </Alert>
+                <Alert
+                  type="warning"
+                  message={
+                    <>
+                      <div>{refreshWarning}</div>
+                      <br />
+                      <strong>{t('Are you sure you want to proceed?')}</strong>
+                    </>
+                  }
+                />
               </RefreshWarningContainer>
             )}
           </div>

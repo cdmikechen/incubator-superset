@@ -18,7 +18,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { t } from '@superset-ui/core';
+import { t, css } from '@superset-ui/core';
 import { Select, CreatableSelect, OnPasteSelect } from 'src/components/Select';
 import ControlHeader from 'src/explore/components/ControlHeader';
 
@@ -204,7 +204,7 @@ export default class SelectControl extends React.PureComponent {
     if (this.optionsIncludesSelectAll(options)) {
       remainingOptions -= 1;
     }
-    return remainingOptions;
+    return remainingOptions < 0 ? 0 : remainingOptions;
   }
 
   createMetaSelectAllOption() {
@@ -221,6 +221,7 @@ export default class SelectControl extends React.PureComponent {
       disabled,
       filterOption,
       isLoading,
+      label,
       menuPlacement,
       name,
       noResultsText,
@@ -255,6 +256,7 @@ export default class SelectControl extends React.PureComponent {
 
     const selectProps = {
       autoFocus,
+      'aria-label': label,
       clearable,
       disabled,
       filterOption,
@@ -292,7 +294,17 @@ export default class SelectControl extends React.PureComponent {
     }
 
     return (
-      <div>
+      <div
+        css={theme => css`
+          .type-label {
+            margin-right: ${theme.gridUnit * 2}px;
+            width: ${theme.gridUnit * 7}px;
+            display: inline-block;
+            text-align: center;
+            font-weight: ${theme.typography.weights.bold};
+          }
+        `}
+      >
         {this.props.showHeader && <ControlHeader {...this.props} />}
         {isMulti ? (
           <OnPasteSelect {...selectProps} selectWrap={SelectComponent} />

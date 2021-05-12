@@ -18,14 +18,15 @@
  */
 /* eslint camelcase: 0 */
 import React from 'react';
-import { Alert, FormControl, FormGroup } from 'react-bootstrap';
+import { Input } from 'src/common/components';
+import { Form, FormItem } from 'src/components/Form';
+import Alert from 'src/components/Alert';
 import { JsonObject, t, styled } from '@superset-ui/core';
 import ReactMarkdown from 'react-markdown';
-import { Radio } from 'src/common/components/Radio';
-import Modal from 'src/common/components/Modal';
+import Modal from 'src/components/Modal';
+import { Radio } from 'src/components/Radio';
 import Button from 'src/components/Button';
-import FormLabel from 'src/components/FormLabel';
-import { CreatableSelect } from 'src/components/Select/SupersetStyledSelect';
+import { CreatableSelect } from 'src/components/Select';
 import { connect } from 'react-redux';
 
 // Session storage key for recent dashboard
@@ -100,9 +101,7 @@ class SaveModal extends React.Component<SaveModalProps, SaveModalState> {
     });
   }
 
-  onSliceNameChange(
-    event: React.FormEvent<FormControl> & { target: HTMLInputElement },
-  ) {
+  onSliceNameChange(event: React.ChangeEvent<HTMLInputElement>) {
     this.setState({ newSliceName: event.target.value });
   }
 
@@ -204,21 +203,26 @@ class SaveModal extends React.Component<SaveModalProps, SaveModalState> {
           </div>
         }
       >
-        <div data-test="save-modal-body">
+        <Form data-test="save-modal-body" layout="vertical">
           {(this.state.alert || this.props.alert) && (
-            <Alert>
-              {this.state.alert ? this.state.alert : this.props.alert}
-              <i
-                role="button"
-                aria-label="Remove alert"
-                tabIndex={0}
-                className="fa fa-close pull-right"
-                onClick={this.removeAlert.bind(this)}
-                style={{ cursor: 'pointer' }}
-              />
-            </Alert>
+            <Alert
+              type="warning"
+              message={
+                <>
+                  {this.state.alert ? this.state.alert : this.props.alert}
+                  <i
+                    role="button"
+                    aria-label="Remove alert"
+                    tabIndex={0}
+                    className="fa fa-close pull-right"
+                    onClick={this.removeAlert.bind(this)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </>
+              }
+            />
           )}
-          <FormGroup data-test="radio-group">
+          <FormItem data-test="radio-group">
             <Radio
               id="overwrite-radio"
               disabled={!(this.props.can_overwrite && this.props.slice)}
@@ -237,22 +241,22 @@ class SaveModal extends React.Component<SaveModalProps, SaveModalState> {
               {' '}
               {t('Save as ...')} &nbsp;
             </Radio>
-          </FormGroup>
+          </FormItem>
           <hr />
-          <FormGroup>
-            <FormLabel required>{t('Chart name')}</FormLabel>
-            <FormControl
+          <FormItem label={t('Chart name')} required>
+            <Input
               name="new_slice_name"
               type="text"
-              bsSize="sm"
               placeholder="Name"
               value={this.state.newSliceName}
               onChange={this.onSliceNameChange}
               data-test="new-chart-name"
             />
-          </FormGroup>
-          <FormGroup data-test="save-chart-modal-select-dashboard-form">
-            <FormLabel>{t('Add to dashboard')}</FormLabel>
+          </FormItem>
+          <FormItem
+            label={t('Add to dashboard')}
+            data-test="save-chart-modal-select-dashboard-form"
+          >
             <CreatableSelect
               id="dashboard-creatable-select"
               className="save-modal-selector"
@@ -271,8 +275,8 @@ class SaveModal extends React.Component<SaveModalProps, SaveModalState> {
                 />
               }
             />
-          </FormGroup>
-        </div>
+          </FormItem>
+        </Form>
       </StyledModal>
     );
   }

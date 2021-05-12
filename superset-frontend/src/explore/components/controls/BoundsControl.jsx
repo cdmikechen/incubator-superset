@@ -18,7 +18,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Col, Row, FormGroup, FormControl } from 'react-bootstrap';
+import { Row, Col, Input } from 'src/common/components';
 import { t } from '@superset-ui/core';
 import ControlHeader from '../ControlHeader';
 
@@ -86,28 +86,26 @@ export default class BoundsControl extends React.Component {
     return (
       <div>
         <ControlHeader {...this.props} />
-        <FormGroup bsSize="small">
-          <Row>
-            <Col xs={6}>
-              <FormControl
-                data-test="min-bound"
-                type="text"
-                placeholder={t('Min')}
-                onChange={this.onMinChange}
-                value={this.state.minMax[0]}
-              />
-            </Col>
-            <Col xs={6}>
-              <FormControl
-                type="text"
-                data-test="max-bound"
-                placeholder={t('Max')}
-                onChange={this.onMaxChange}
-                value={this.state.minMax[1]}
-              />
-            </Col>
-          </Row>
-        </FormGroup>
+        <Row gutter={16}>
+          <Col xs={12}>
+            <Input
+              data-test="min-bound"
+              type="text"
+              placeholder={t('Min')}
+              onChange={this.onMinChange}
+              value={this.state.minMax[0]}
+            />
+          </Col>
+          <Col xs={12}>
+            <Input
+              type="text"
+              data-test="max-bound"
+              placeholder={t('Max')}
+              onChange={this.onMaxChange}
+              value={this.state.minMax[1]}
+            />
+          </Col>
+        </Row>
       </div>
     );
   }

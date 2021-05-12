@@ -20,8 +20,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormGroup, HelpBlock, FormControl } from 'react-bootstrap';
 
-import { Tooltip } from 'src/common/components/Tooltip';
-import FormLabel from 'src/components/FormLabel';
+import { Tooltip } from 'src/components/Tooltip';
+import { FormLabel } from 'src/components/Form';
 import './crud.less';
 
 const propTypes = {

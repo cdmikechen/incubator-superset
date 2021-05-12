@@ -20,8 +20,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { t } from '@superset-ui/core';
 import { InfoTooltipWithTrigger } from '@superset-ui/chart-controls';
-import { Tooltip } from 'src/common/components/Tooltip';
-import FormLabel from 'src/components/FormLabel';
+import { Tooltip } from 'src/components/Tooltip';
+import { FormLabel } from 'src/components/Form';
 
 const propTypes = {
   name: PropTypes.string,
@@ -85,7 +85,7 @@ export default class ControlHeader extends React.Component {
     return (
       <div className="ControlHeader" data-test={`${this.props.name}-header`}>
         <div className="pull-left">
-          <FormLabel>
+          <FormLabel css={{ marginBottom: 0 }}>
             {this.props.leftNode && <span>{this.props.leftNode}</span>}
             <span
               role="button"

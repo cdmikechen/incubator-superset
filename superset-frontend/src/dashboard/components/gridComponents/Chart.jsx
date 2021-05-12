@@ -65,10 +65,13 @@ const propTypes = {
   isExpanded: PropTypes.bool.isRequired,
   isCached: PropTypes.bool,
   supersetCanExplore: PropTypes.bool.isRequired,
+  supersetCanShare: PropTypes.bool.isRequired,
   supersetCanCSV: PropTypes.bool.isRequired,
   sliceCanEdit: PropTypes.bool.isRequired,
   addSuccessToast: PropTypes.func.isRequired,
   addDangerToast: PropTypes.func.isRequired,
+  ownState: PropTypes.object,
+  filterState: PropTypes.object,
 };
 
 const defaultProps = {
@@ -98,6 +101,7 @@ export default class Chart extends React.Component {
     this.state = {
       width: props.width,
       height: props.height,
+      descriptionHeight: 0,
     };
 
     this.changeFilter = this.changeFilter.bind(this);
@@ -117,7 +121,8 @@ export default class Chart extends React.Component {
     // which improves performance significantly
     if (
       nextState.width !== this.state.width ||
-      nextState.height !== this.state.height
+      nextState.height !== this.state.height ||
+      nextState.descriptionHeight !== this.state.descriptionHeight
     ) {
       return true;
     }
@@ -161,14 +166,20 @@ export default class Chart extends React.Component {
     clearTimeout(this.resizeTimeout);
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.isExpanded !== prevProps.isExpanded) {
+      const descriptionHeight =
+        this.props.isExpanded && this.descriptionRef
+          ? this.descriptionRef.offsetHeight
+          : 0;
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ descriptionHeight });
+    }
+  }
+
   getChartHeight() {
     const headerHeight = this.getHeaderHeight();
-    const descriptionHeight =
-      this.props.isExpanded && this.descriptionRef
-        ? this.descriptionRef.offsetHeight
-        : 0;
-
-    return this.state.height - headerHeight - descriptionHeight;
+    return this.state.height - headerHeight - this.state.descriptionHeight;
   }
 
   getHeaderHeight() {
@@ -255,10 +266,13 @@ export default class Chart extends React.Component {
       toggleExpandSlice,
       timeout,
       supersetCanExplore,
+      supersetCanShare,
       supersetCanCSV,
       sliceCanEdit,
       addSuccessToast,
       addDangerToast,
+      ownState,
+      filterState,
       handleToggleFullSize,
       isFullSize,
     } = this.props;
@@ -286,7 +300,13 @@ export default class Chart extends React.Component {
         })
       : {};
     return (
-      <div className="chart-slice">
+      <div
+        className="chart-slice"
+        data-test="chart-grid-component"
+        data-test-chart-id={id}
+        data-test-viz-type={slice.viz_type}
+        data-test-chart-name={slice.slice_name}
+      >
         <SliceHeader
           innerRef={this.setHeaderRef}
           slice={slice}
@@ -303,6 +323,7 @@ export default class Chart extends React.Component {
           updateSliceName={updateSliceName}
           sliceName={sliceName}
           supersetCanExplore={supersetCanExplore}
+          supersetCanShare={supersetCanShare}
           supersetCanCSV={supersetCanCSV}
           sliceCanEdit={sliceCanEdit}
           componentId={componentId}
@@ -360,11 +381,12 @@ export default class Chart extends React.Component {
             dashboardId={dashboardId}
             initialValues={initialValues}
             formData={formData}
+            ownState={ownState}
+            filterState={filterState}
             queriesResponse={chart.queriesResponse}
             timeout={timeout}
             triggerQuery={chart.triggerQuery}
             vizType={slice.viz_type}
-            owners={slice.owners}
           />
         </div>
       </div>

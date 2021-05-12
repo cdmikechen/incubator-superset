@@ -20,7 +20,7 @@ import React, { useState } from 'react';
 import cx from 'classnames';
 import { t } from '@superset-ui/core';
 import Icon from 'src/components/Icon';
-import { Tooltip } from 'src/common/components/Tooltip';
+import { Tooltip } from 'src/components/Tooltip';
 import copyTextToClipboard from 'src/utils/copy';
 import withToasts from 'src/messageToasts/enhancers/withToasts';
 import { useUrlShortener } from 'src/common/hooks/useUrlShortener';
@@ -40,8 +40,7 @@ type ActionButtonProps = {
 
 type ExploreActionButtonsProps = {
   actions: { redirectSQLLab: Function; openPropertiesModal: Function };
-  canDownload: boolean;
-  chartHeight: number;
+  canDownloadCSV: boolean;
   chartStatus: string;
   latestQueryFormData: {};
   queriesResponse: {};
@@ -84,8 +83,7 @@ const ActionButton = (props: ActionButtonProps) => {
 const ExploreActionButtons = (props: ExploreActionButtonsProps) => {
   const {
     actions,
-    canDownload,
-    chartHeight,
+    canDownloadCSV,
     chartStatus,
     latestQueryFormData,
     queriesResponse,
@@ -120,20 +118,22 @@ const ExploreActionButtons = (props: ExploreActionButtonsProps) => {
     }
   };
 
-  const doExportCSV = exportChart.bind(this, {
-    formData: latestQueryFormData,
-    resultType: 'results',
-    resultFormat: 'csv',
-  });
+  const doExportCSV = canDownloadCSV
+    ? exportChart.bind(this, {
+        formData: latestQueryFormData,
+        resultType: 'results',
+        resultFormat: 'csv',
+      })
+    : null;
 
-  const doExportChart = exportChart.bind(this, {
+  const doExportJson = exportChart.bind(this, {
     formData: latestQueryFormData,
     resultType: 'results',
     resultFormat: 'json',
   });
 
   const exportToCSVClasses = cx('btn btn-default btn-sm', {
-    disabled: !canDownload,
+    disabled: !canDownloadCSV,
   });
 
   return (
@@ -177,7 +177,7 @@ const ExploreActionButtons = (props: ExploreActionButtonsProps) => {
             icon={<i className="fa fa-file-code-o" />}
             text=".JSON"
             tooltip={t('Export to .JSON format')}
-            onClick={doExportChart}
+            onClick={doExportJson}
           />
           <ActionButton
             icon={<i className="fa fa-file-text-o" />}
@@ -189,7 +189,6 @@ const ExploreActionButtons = (props: ExploreActionButtonsProps) => {
         </>
       )}
       <ConnectedDisplayQueryButton
-        chartHeight={chartHeight}
         queryResponse={queriesResponse?.[0]}
         latestQueryFormData={latestQueryFormData}
         chartStatus={chartStatus}

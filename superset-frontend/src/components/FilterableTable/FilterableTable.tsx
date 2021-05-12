@@ -30,7 +30,7 @@ import {
   Table,
 } from 'react-virtualized';
 import { getMultipleTextDimensions, t, styled } from '@superset-ui/core';
-import { Tooltip } from 'src/common/components/Tooltip';
+import { Tooltip } from 'src/components/Tooltip';
 import Button from '../Button';
 import CopyToClipboard from '../CopyToClipboard';
 import ModalTrigger from '../ModalTrigger';
@@ -84,7 +84,7 @@ const JSON_TREE_THEME = {
 
 const StyledFilterableTable = styled.div`
   overflow-x: auto;
-  margin-top: ${({ theme }) => theme.gridUnit * 12}px;
+  margin-top: ${({ theme }) => theme.gridUnit * 2}px;
 `;
 
 // when more than MAX_COLUMNS_FOR_TABLE are returned, switch from table to grid view

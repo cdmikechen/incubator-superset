@@ -21,7 +21,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 import { styled, t } from '@superset-ui/core';
-import { Tooltip } from 'src/common/components/Tooltip';
+import { Tooltip } from 'src/components/Tooltip';
 import { chartPropShape } from '../../dashboard/util/propShapes';
 import ExploreActionButtons from './ExploreActionButtons';
 import RowCountLabel from './RowCountLabel';
@@ -44,12 +44,12 @@ const propTypes = {
   addHistory: PropTypes.func,
   can_overwrite: PropTypes.bool.isRequired,
   can_download: PropTypes.bool.isRequired,
-  chartHeight: PropTypes.string.isRequired,
   isStarred: PropTypes.bool.isRequired,
   slice: PropTypes.object,
   sliceName: PropTypes.string,
   table_name: PropTypes.string,
   form_data: PropTypes.object,
+  ownState: PropTypes.object,
   timeout: PropTypes.number,
   chart: chartPropShape,
 };
@@ -107,6 +107,7 @@ export class ExploreChartHeader extends React.PureComponent {
       true,
       this.props.timeout,
       this.props.chart.id,
+      this.props.ownState,
     );
   }
 
@@ -208,9 +209,8 @@ export class ExploreChartHeader extends React.PureComponent {
               openPropertiesModal: this.openPropertiesModal,
             }}
             slice={this.props.slice}
-            canDownload={this.props.can_download}
+            canDownloadCSV={this.props.can_download}
             chartStatus={chartStatus}
-            chartHeight={this.props.chartHeight}
             latestQueryFormData={latestQueryFormData}
             queryResponse={queryResponse}
           />

@@ -16,24 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { styled, t } from '@superset-ui/core';
+import { t } from '@superset-ui/core';
 import React, { useEffect, useState } from 'react';
 import { Slider } from 'src/common/components';
 import { PluginFilterRangeProps } from './types';
-import { PluginFilterStylesProps } from '../types';
+import { Styles } from '../common';
 import { getRangeExtraFormData } from '../../utils';
 
-const Styles = styled.div<PluginFilterStylesProps>`
-  height: ${({ height }) => height};
-  width: ${({ width }) => width};
-`;
-
 export default function RangeFilterPlugin(props: PluginFilterRangeProps) {
-  const { data, formData, height, width, setExtraFormData, inputRef } = props;
+  const {
+    data,
+    formData,
+    height,
+    width,
+    setDataMask,
+    inputRef,
+    filterState,
+  } = props;
   const [row] = data;
   // @ts-ignore
   const { min, max }: { min: number; max: number } = row;
-  const { groupby, currentValue, defaultValue } = formData;
+  const { groupby, defaultValue } = formData;
   const [col = ''] = groupby || [];
   const [value, setValue] = useState<[number, number]>(
     defaultValue ?? [min, max],
@@ -42,9 +45,10 @@ export default function RangeFilterPlugin(props: PluginFilterRangeProps) {
   const handleAfterChange = (value: [number, number]) => {
     const [lower, upper] = value;
     setValue(value);
-    setExtraFormData({
+
+    setDataMask({
       extraFormData: getRangeExtraFormData(col, lower, upper),
-      currentState: {
+      filterState: {
         value,
       },
     });
@@ -55,8 +59,8 @@ export default function RangeFilterPlugin(props: PluginFilterRangeProps) {
   };
 
   useEffect(() => {
-    handleAfterChange(currentValue ?? [min, max]);
-  }, [JSON.stringify(currentValue)]);
+    handleAfterChange(filterState.value ?? [min, max]);
+  }, [JSON.stringify(filterState.value)]);
 
   useEffect(() => {
     handleAfterChange(defaultValue ?? [min, max]);

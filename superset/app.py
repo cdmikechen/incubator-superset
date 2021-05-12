@@ -35,6 +35,7 @@ from superset.extensions import (
     celery_app,
     csrf,
     db,
+    encrypted_field_factory,
     feature_flag_manager,
     machine_auth_provider_factory,
     manifest_processor,
@@ -75,6 +76,7 @@ class SupersetIndexView(IndexView):
         return redirect("/superset/welcome/")
 
 
+# pylint: disable=R0904
 class SupersetAppInitializer:
     def __init__(self, app: Flask) -> None:
         super().__init__()
@@ -148,7 +150,10 @@ class SupersetAppInitializer:
         from superset.dashboards.api import DashboardRestApi
         from superset.databases.api import DatabaseRestApi
         from superset.datasets.api import DatasetRestApi
+        from superset.datasets.columns.api import DatasetColumnsRestApi
+        from superset.datasets.metrics.api import DatasetMetricRestApi
         from superset.queries.api import QueryRestApi
+        from superset.security.api import SecurityRestApi
         from superset.queries.saved_queries.api import SavedQueryRestApi
         from superset.reports.api import ReportScheduleRestApi
         from superset.reports.logs.api import ReportExecutionLogRestApi
@@ -212,6 +217,8 @@ class SupersetAppInitializer:
         appbuilder.add_api(DashboardRestApi)
         appbuilder.add_api(DatabaseRestApi)
         appbuilder.add_api(DatasetRestApi)
+        appbuilder.add_api(DatasetColumnsRestApi)
+        appbuilder.add_api(DatasetMetricRestApi)
         appbuilder.add_api(QueryRestApi)
         appbuilder.add_api(SavedQueryRestApi)
         if feature_flag_manager.is_feature_enabled("ALERT_REPORTS"):
@@ -369,7 +376,7 @@ class SupersetAppInitializer:
             appbuilder.add_link(
                 "Upload a CSV",
                 label=__("Upload a CSV"),
-                href="/csvtodatabaseview/form/",
+                href="/csvtodatabaseview/form",
                 icon="fa-upload",
                 category="Data",
                 category_label=__("Data"),
@@ -384,7 +391,7 @@ class SupersetAppInitializer:
                 appbuilder.add_link(
                     "Upload Excel",
                     label=__("Upload Excel"),
-                    href="/exceltodatabaseview/form/",
+                    href="/exceltodatabaseview/form",
                     icon="fa-upload",
                     category="Data",
                     category_label=__("Data"),
@@ -406,11 +413,15 @@ class SupersetAppInitializer:
                 category_label=__("Security"),
                 icon="fa-list-ol",
             )
-
+        appbuilder.add_api(SecurityRestApi)
         #
         # Conditionally setup email views
         #
         if self.config["ENABLE_SCHEDULED_EMAIL_REPORTS"]:
+            logging.warning(
+                "ENABLE_SCHEDULED_EMAIL_REPORTS "
+                "is deprecated and will be removed in version 2.0.0"
+            )
             appbuilder.add_separator("Manage")
             appbuilder.add_view(
                 DashboardEmailScheduleView,
@@ -430,6 +441,9 @@ class SupersetAppInitializer:
             )
 
         if self.config["ENABLE_ALERTS"]:
+            logging.warning(
+                "ENABLE_ALERTS is deprecated and will be removed in version 2.0.0"
+            )
             appbuilder.add_view(
                 AlertModelView,
                 "Alerts",
@@ -537,13 +551,15 @@ class SupersetAppInitializer:
         order to fully init the app
         """
         self.pre_init()
+        # Configuration of logging must be done first to apply the formatter properly
+        self.configure_logging()
+        self.configure_db_encrypt()
         self.setup_db()
         self.configure_celery()
         self.setup_event_logger()
         self.setup_bundle_manifest()
         self.register_blueprints()
         self.configure_wtf()
-        self.configure_logging()
         self.configure_middlewares()
         self.configure_cache()
 
@@ -656,6 +672,9 @@ class SupersetAppInitializer:
         self.config["LOGGING_CONFIGURATOR"].configure_logging(
             self.config, self.flask_app.debug
         )
+
+    def configure_db_encrypt(self) -> None:
+        encrypted_field_factory.init_app(self.flask_app)
 
     def setup_db(self) -> None:
         db.init_app(self.flask_app)

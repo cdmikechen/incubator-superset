@@ -61,12 +61,13 @@ from superset.exceptions import (
     NullValueException,
     QueryObjectValidationError,
     SpatialException,
+    SupersetSecurityException,
 )
 from superset.extensions import cache_manager, security_manager
 from superset.models.cache import CacheKey
 from superset.models.helpers import QueryResult
 from superset.typing import QueryObjectDict, VizData, VizPayload
-from superset.utils import core as utils
+from superset.utils import core as utils, csv
 from superset.utils.cache import set_and_log_cache
 from superset.utils.core import (
     DTTM_ALIAS,
@@ -284,7 +285,7 @@ class BaseViz:
         # If the datetime format is unix, the parse will use the corresponding
         # parsing logic.
         if not df.empty:
-            df = utils.normalize_dttm_col(
+            utils.normalize_dttm_col(
                 df=df,
                 timestamp_format=timestamp_format,
                 offset=self.datasource.offset,
@@ -439,7 +440,13 @@ class BaseViz:
     def get_payload(self, query_obj: Optional[QueryObjectDict] = None) -> VizPayload:
         """Returns a payload of metadata and data"""
 
-        self.run_extra_queries()
+        try:
+            self.run_extra_queries()
+        except SupersetSecurityException as ex:
+            error = dataclasses.asdict(ex.error)
+            self.errors.append(error)
+            self.status = utils.QueryStatus.FAILED
+
         payload = self.get_df_payload(query_obj)
 
         df = payload.get("df")
@@ -502,7 +509,8 @@ class BaseViz:
                 except Exception as ex:
                     logger.exception(ex)
                     logger.error(
-                        "Error reading cache: " + utils.error_msg_from_exception(ex)
+                        "Error reading cache: " + utils.error_msg_from_exception(ex),
+                        exc_info=True,
                     )
                 logger.info("Serving from cache")
 
@@ -519,7 +527,8 @@ class BaseViz:
                     + (query_obj.get("groupby") or [])
                     + utils.get_column_names_from_metrics(
                         cast(
-                            List[Union[str, Dict[str, Any]]], query_obj.get("metrics"),
+                            List[Union[str, Dict[str, Any]]],
+                            query_obj.get("metrics") or [],
                         )
                     )
                     if col not in self.datasource.column_names
@@ -614,7 +623,7 @@ class BaseViz:
     def get_csv(self) -> Optional[str]:
         df = self.get_df_payload()["df"]  # leverage caching logic
         include_index = not isinstance(df.index, pd.RangeIndex)
-        return df.to_csv(index=include_index, **config["CSV_EXPORT"])
+        return csv.df_to_escaped_csv(df, index=include_index, **config["CSV_EXPORT"])
 
     def get_data(self, df: pd.DataFrame) -> VizData:
         return df.to_dict(orient="records")
@@ -719,7 +728,7 @@ class TableViz(BaseViz):
             sort_by = fd.get("timeseries_limit_metric")
             if sort_by:
                 sort_by_label = utils.get_metric_name(sort_by)
-                if sort_by_label not in d["metrics"]:
+                if sort_by_label not in utils.get_metric_names(d["metrics"]):
                     d["metrics"].append(sort_by)
                 d["orderby"] = [(sort_by, not fd.get("order_desc", True))]
             elif d["metrics"]:
@@ -844,6 +853,13 @@ class PivotTableViz(BaseViz):
             raise QueryObjectValidationError(_("Please choose at least one metric"))
         if set(groupby) & set(columns):
             raise QueryObjectValidationError(_("Group By' and 'Columns' can't overlap"))
+        sort_by = self.form_data.get("timeseries_limit_metric")
+        if sort_by:
+            sort_by_label = utils.get_metric_name(sort_by)
+            if sort_by_label not in utils.get_metric_names(d["metrics"]):
+                d["metrics"].append(sort_by)
+            if self.form_data.get("order_desc"):
+                d["orderby"] = [(sort_by, not self.form_data.get("order_desc", True))]
         return d
 
     @staticmethod
@@ -942,6 +958,17 @@ class TreemapViz(BaseViz):
     credits = '<a href="https://d3js.org">d3.js</a>'
     is_timeseries = False
 
+    def query_obj(self) -> QueryObjectDict:
+        d = super().query_obj()
+        sort_by = self.form_data.get("timeseries_limit_metric")
+        if sort_by:
+            sort_by_label = utils.get_metric_name(sort_by)
+            if sort_by_label not in utils.get_metric_names(d["metrics"]):
+                d["metrics"].append(sort_by)
+            if self.form_data.get("order_desc"):
+                d["orderby"] = [(sort_by, not self.form_data.get("order_desc", True))]
+        return d
+
     def _nest(self, metric: str, df: pd.DataFrame) -> List[Dict[str, Any]]:
         nlevels = df.index.nlevels
         if nlevels == 1:
@@ -979,7 +1006,6 @@ class CalHeatmapViz(BaseViz):
             return None
 
         form_data = self.form_data
-
         data = {}
         records = df.to_dict("records")
         for metric in self.metric_labels:
@@ -1010,7 +1036,7 @@ class CalHeatmapViz(BaseViz):
         diff_secs = (end - start).total_seconds()
 
         if domain == "year":
-            range_ = diff_delta.years + 1
+            range_ = end.year - start.year + 1
         elif domain == "month":
             range_ = diff_delta.years * 12 + diff_delta.months + 1
         elif domain == "week":
@@ -1032,6 +1058,19 @@ class CalHeatmapViz(BaseViz):
         d = super().query_obj()
         fd = self.form_data
         d["metrics"] = fd.get("metrics")
+        mapping = {
+            "min": "PT1M",
+            "hour": "PT1H",
+            "day": "P1D",
+            "week": "P1W",
+            "month": "P1M",
+            "year": "P1Y",
+        }
+        time_grain = mapping[fd.get("subdomain_granularity", "min")]
+        if self.datasource.type == "druid":
+            d["granularity"] = time_grain
+        else:
+            d["extras"]["time_grain_sqla"] = time_grain
         return d
 
 
@@ -1190,6 +1229,17 @@ class NVD3TimeSeriesViz(NVD3Viz):
     is_timeseries = True
     pivot_fill_value: Optional[int] = None
 
+    def query_obj(self) -> QueryObjectDict:
+        d = super().query_obj()
+        sort_by = self.form_data.get("timeseries_limit_metric")
+        if sort_by:
+            sort_by_label = utils.get_metric_name(sort_by)
+            if sort_by_label not in utils.get_metric_names(d["metrics"]):
+                d["metrics"].append(sort_by)
+            if self.form_data.get("order_desc"):
+                d["orderby"] = [(sort_by, not self.form_data.get("order_desc", True))]
+        return d
+
     def to_series(
         self, df: pd.DataFrame, classed: str = "", title_suffix: str = ""
     ) -> List[Dict[str, Any]]:
@@ -1324,8 +1374,10 @@ class NVD3TimeSeriesViz(NVD3Viz):
 
             df2 = self.get_df_payload(query_object, time_compare=option).get("df")
             if df2 is not None and DTTM_ALIAS in df2:
+                dttm_series = df2[DTTM_ALIAS] + delta
+                df2 = df2.drop(DTTM_ALIAS, axis=1)
+                df2 = pd.concat([dttm_series, df2], axis=1)
                 label = "{} offset".format(option)
-                df2[DTTM_ALIAS] += delta
                 df2 = self.process_data(df2)
                 self._extra_chart_data.append((label, df2))
 
@@ -1432,10 +1484,14 @@ class MultiLineViz(NVD3Viz):
                 x_values = [value["x"] for value in series["values"]]
                 min_x = min(x_values + ([min_x] if min_x is not None else []))
                 max_x = max(x_values + ([max_x] if max_x is not None else []))
-
+                series_key = (
+                    series["key"]
+                    if isinstance(series["key"], (list, tuple))
+                    else [series["key"]]
+                )
                 data.append(
                     {
-                        "key": prefix + ", ".join(series["key"]),
+                        "key": prefix + ", ".join(series_key),
                         "type": "line",
                         "values": series["values"],
                         "yAxis": y_axis,
@@ -1621,7 +1677,8 @@ class HistogramViz(BaseViz):
         self.columns = numeric_columns
         d["columns"] = numeric_columns + self.groupby
         # override groupby entry to avoid aggregation
-        d["groupby"] = []
+        d["groupby"] = None
+        d["metrics"] = None
         return d
 
     def labelify(self, keys: Union[List[str], str], column: str) -> str:
@@ -1678,7 +1735,18 @@ class DistributionBarViz(BaseViz):
             raise QueryObjectValidationError(_("Pick at least one metric"))
         if not fd.get("groupby"):
             raise QueryObjectValidationError(_("Pick at least one field for [Series]"))
-        d["orderby"] = [(metric, False) for metric in d["metrics"]]
+
+        sort_by = fd.get("timeseries_limit_metric")
+        if sort_by:
+            sort_by_label = utils.get_metric_name(sort_by)
+            if sort_by_label not in utils.get_metric_names(d["metrics"]):
+                d["metrics"].append(sort_by)
+            d["orderby"] = [(sort_by, not fd.get("order_desc", True))]
+        elif d["metrics"]:
+            # Legacy behavior of sorting by first metric by default
+            first_metric = d["metrics"][0]
+            d["orderby"] = [(first_metric, not fd.get("order_desc", True))]
+
         return d
 
     def get_data(self, df: pd.DataFrame) -> VizData:
@@ -1840,31 +1908,6 @@ class SankeyViz(BaseViz):
         return recs
 
 
-class DirectedForceViz(BaseViz):
-
-    """An animated directed force layout graph visualization"""
-
-    viz_type = "directed_force"
-    verbose_name = _("Directed Force Layout")
-    credits = 'd3noob @<a href="http://bl.ocks.org/d3noob/5141278">bl.ocks.org</a>'
-    is_timeseries = False
-
-    def query_obj(self) -> QueryObjectDict:
-        qry = super().query_obj()
-        if len(self.form_data["groupby"]) != 2:
-            raise QueryObjectValidationError(_("Pick exactly 2 columns to 'Group By'"))
-        qry["metrics"] = [self.form_data["metric"]]
-        if self.form_data.get("sort_by_metric", False):
-            qry["orderby"] = [(qry["metrics"][0], False)]
-        return qry
-
-    def get_data(self, df: pd.DataFrame) -> VizData:
-        if df.empty:
-            return None
-        df.columns = ["source", "target", "value"]
-        return df.to_dict(orient="records")
-
-
 class ChordViz(BaseViz):
 
     """A Chord diagram"""
@@ -1911,8 +1954,16 @@ class CountryMapViz(BaseViz):
 
     def query_obj(self) -> QueryObjectDict:
         qry = super().query_obj()
-        qry["metrics"] = [self.form_data["metric"]]
-        qry["groupby"] = [self.form_data["entity"]]
+        metric = self.form_data.get("metric")
+        entity = self.form_data.get("entity")
+        if not self.form_data.get("select_country"):
+            raise QueryObjectValidationError("Must specify a country")
+        if not metric:
+            raise QueryObjectValidationError("Must specify a metric")
+        if not entity:
+            raise QueryObjectValidationError("Must provide ISO codes")
+        qry["metrics"] = [metric]
+        qry["groupby"] = [entity]
         return qry
 
     def get_data(self, df: pd.DataFrame) -> VizData:
@@ -2004,6 +2055,8 @@ class FilterBoxViz(BaseViz):
         return {}
 
     def run_extra_queries(self) -> None:
+        from superset.common.query_context import QueryContext
+
         qry = super().query_obj()
         filters = self.form_data.get("filter_configs") or []
         qry["row_limit"] = self.filter_row_limit
@@ -2017,6 +2070,13 @@ class FilterBoxViz(BaseViz):
             qry["groupby"] = [col]
             metric = flt.get("metric")
             qry["metrics"] = [metric] if metric else []
+            asc = flt.get("asc")
+            if metric and asc is not None:
+                qry["orderby"] = [(metric, asc)]
+            QueryContext(
+                datasource={"id": self.datasource.id, "type": self.datasource.type},
+                queries=[qry],
+            ).raise_for_access()
             df = self.get_df_payload(query_obj=qry).get("df")
             self.dataframes[col] = df
 
@@ -2067,6 +2127,13 @@ class ParallelCoordinatesViz(BaseViz):
         d = super().query_obj()
         fd = self.form_data
         d["groupby"] = [fd.get("series")]
+        sort_by = self.form_data.get("timeseries_limit_metric")
+        if sort_by:
+            sort_by_label = utils.get_metric_name(sort_by)
+            if sort_by_label not in utils.get_metric_names(d["metrics"]):
+                d["metrics"].append(sort_by)
+            if self.form_data.get("order_desc"):
+                d["orderby"] = [(sort_by, not self.form_data.get("order_desc", True))]
         return d
 
     def get_data(self, df: pd.DataFrame) -> VizData:
@@ -2179,7 +2246,11 @@ class MapboxViz(BaseViz):
             if fd.get("point_radius") != "Auto":
                 d["columns"].append(fd.get("point_radius"))
 
-            d["columns"] = list(set(d["columns"]))
+            # Ensure this value is sorted so that it does not
+            # cause the cache key generation (which hashes the
+            # query object) to generate different keys for values
+            # that should be considered the same.
+            d["columns"] = sorted(set(d["columns"]))
         else:
             # Ensuring columns chosen are all in group by
             if (
@@ -2423,7 +2494,11 @@ class BaseDeckGLViz(BaseViz):
         if fd.get("js_columns"):
             gb += fd.get("js_columns") or []
         metrics = self.get_metrics()
-        gb = list(set(gb))
+        # Ensure this value is sorted so that it does not
+        # cause the cache key generation (which hashes the
+        # query object) to generate different keys for values
+        # that should be considered the same.
+        gb = sorted(set(gb))
         if metrics:
             d["groupby"] = gb
             d["metrics"] = metrics
@@ -2759,6 +2834,18 @@ class PairedTTestViz(BaseViz):
     verbose_name = _("Time Series - Paired t-test")
     sort_series = False
     is_timeseries = True
+
+    def query_obj(self) -> QueryObjectDict:
+        d = super().query_obj()
+        metrics = self.form_data.get("metrics")
+        sort_by = self.form_data.get("timeseries_limit_metric")
+        if sort_by:
+            sort_by_label = utils.get_metric_name(sort_by)
+            if sort_by_label not in utils.get_metric_names(d["metrics"]):
+                d["metrics"].append(sort_by)
+            if self.form_data.get("order_desc"):
+                d["orderby"] = [(sort_by, not self.form_data.get("order_desc", True))]
+        return d
 
     def get_data(self, df: pd.DataFrame) -> VizData:
         """

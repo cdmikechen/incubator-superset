@@ -31,7 +31,7 @@ export type Type =
   | 'primary'
   | 'secondary';
 
-export interface LabelProps {
+export interface LabelProps extends React.HTMLAttributes<HTMLSpanElement> {
   key?: string;
   className?: string;
   onClick?: OnClickHandler;
@@ -87,6 +87,8 @@ export default function Label(props: LabelProps) {
 
   return (
     <Tag
+      onClick={onClick}
+      {...rest}
       css={{
         transition: `background-color ${transitionTiming}s`,
         whiteSpace: 'nowrap',
@@ -105,8 +107,6 @@ export default function Label(props: LabelProps) {
           opacity: 1,
         },
       }}
-      onClick={onClick}
-      {...rest}
     >
       {children}
     </Tag>
